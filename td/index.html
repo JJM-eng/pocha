@@ -172,7 +172,7 @@
    // 1,2,4,6 = gold; 3,5,7 = gems
 
   const UB = id => UNITS.find(u => u.id === id);
-  UNITS.forEach(u => { const im = new Image(); im.onload = () => ART['u_' + u.id] = im; im.src = 'art/u_' + u.id + '.webp'; });
+  UNITS.forEach(u => { const im = new Image(); im.onload = () => ART['u_' + u.id] = im; im.src = 'art/u_' + u.id + '.webp'; const ia = new Image(); ia.onload = () => ART['ua_' + u.id] = ia; ia.src = 'art/ua_' + u.id + '.webp'; });
   const RECIPES = [
     { out: 'drag5', need: ['sword4', 'sword3', 'fire3'] },
     { out: 'star5', need: ['bow4', 'bow3', 'bow2'] },
@@ -255,14 +255,18 @@
     G.texts.push({ s: '+' + gain, x, y: y - 20, t: 0.6, c: '#ffe27a' }); if (m.boss) G.shake = 8;
     burst(x, y, m.boss ? '#ffd447' : '#fff', m.boss ? 40 : 0); if (m === G.bossAlive){ G.bossAlive = null; qAdd('boss'); G.bosses = (G.bosses || 0) + 1; G.luck += 3; banner('보스 처치! 🍀+3', '#6ee07a'); G.flash = 0.5; G.flashC = '255,230,120'; SFX.myth(); G.waveT = Math.min(G.waveT, 4); } }
   const FIRE = { fire3: 1, drag5: 1, arch5: 1 };
-  function tickUnit(s, dt, x, y, bonus, mul){ s.pop = Math.max(0, s.pop - dt * 3); s.atk = Math.max(0, (s.atk || 0) - dt); s.cd -= dt;
-    if (s.cd <= 0 && attack(s, x, y, bonus, mul)) s.cd = 1 / s.u.spd;
-    const SK = SKILL[s.u.id]; if (SK){ s.sk = (s.sk || 0) + dt; if (s.sk >= SK.cd && G.mobs.length){ s.sk = 0; castSkill(s, x, y, mul); } } }
+  const AT = 0.34, CT = 0.95;
+  function tickUnit(s, dt, x, y, bonus, mul){ s.pop = Math.max(0, s.pop - dt * 3); s.atk = Math.max(0, (s.atk || 0) - dt); s.cast = Math.max(0, (s.cast || 0) - dt); s.cd -= dt;
+    if (s.pend && s.atk <= AT * 0.5){ const f = s.pend; s.pend = null; f(); }
+    if (s.cpend && s.cast <= CT * 0.45){ const f = s.cpend; s.cpend = null; f(); }
+    if (s.cd <= 0 && !s.cast && !s.pend){ const list = front(inRange(x, y, s.u.rng + bonus)); if (list.length){ const [tx, ty] = mobXY(list[0]);
+      s.face = tx > x + 4 ? -1 : 1; s.ang = Math.atan2(ty - 10 - (y - 14), tx - x); s.atk = AT; s.pend = () => attack(s, x, y, bonus, mul); s.cd = Math.max(AT + 0.05, 1 / s.u.spd); } }
+    const SK = SKILL[s.u.id]; if (SK){ s.sk = (s.sk || 0) + dt; if (s.sk >= SK.cd && G.mobs.length && !s.cast){ s.sk = 0; s.cast = CT; s.atk = 0; s.pend = null; float(SK.n + '!', x, y - 40, '#ff8aa8'); SFX.rare(); s.cpend = () => castSkill(s, x, y, mul); } } }
   const PX = i => 38 + i * 35.5, PY = 178;
   function attack(s, x, y, bonus = 0, mul = 1){
     const U = s.u, list = front(inRange(x, y, U.rng + bonus)); if (!list.length) return false;
     const D = U.dmg * upMul(U.id) * grpMul(U.r) * (1 + TL('scroll') * 0.05) * mul, t = list[0], [tx, ty] = mobXY(t), c = RAR[U.r].c, ang = Math.atan2(ty - 10 - (y - 14), tx - x);
-    s.face = tx > x + 4 ? -1 : 1; s.atk = 0.24; s.ang = ang;
+    s.face = tx > x + 4 ? -1 : 1; s.ang = ang;
     const sy = y - 18;
     if (U.kind === 'melee'){ damage(t, D); G.fx.push({ k: 'swipe', x: tx, y: ty - 12, a: ang, t: 0.22, T: 0.22, c, r: 16 + U.r * 3 }); spark(tx, ty - 12, c, 5 + U.r * 2); }
     else if (U.kind === 'arrow' || U.kind === 'multi'){ (U.kind === 'multi' ? list.slice(0, U.n) : [t]).forEach((m, k) => G.shots.push({ k: U.id === 'star5' ? 'star' : 'arrow', x: x + (k - 1) * 3, y: sy, tgt: m, dmg: D, sp: 560, c, trail: [] })); }
@@ -281,8 +285,7 @@
   function mission(k){ if (G.mis[k] > 0 || G.wave < 1) return; const hp = mobHp(Math.max(3, G.wave)) * MISS[k].hp; G.mis[k] = 60;
     G.mobs.push({ d: 0, hp, max: hp, spd: 28, mbo: true, mission: k, life: 40, type: MISS[k].type, slowT: 0, hit: 0, id: Math.random() }); banner(`미션: ${MISS[k].n}`, '#ff9a5a'); SFX.boss(); G.panel = null; }
   const SKILL = { drag5: { n: '용의 숨결', cd: 5 }, star5: { n: '별의 비', cd: 6 }, arch5: { n: '메테오', cd: 8 } };
-  function castSkill(s, x, y, mul){ const U = s.u, D = U.dmg * upMul(U.id) * grpMul(U.r) * (1 + TL('scroll') * 0.05) * mul; s.atk = 0.24;
-    float(SKILL[U.id].n + '!', x, y - 34, '#ff8aa8');
+  function castSkill(s, x, y, mul){ const U = s.u, D = U.dmg * upMul(U.id) * grpMul(U.r) * (1 + TL('scroll') * 0.05) * mul;
     if (U.id === 'drag5'){ const t = front(inRange(x, y, 200))[0] || front([...G.mobs])[0]; if (!t) return; const [tx, ty] = mobXY(t);
       for (let i = 0; i < 26; i++){ const f = Math.random(); G.fx.push({ k: 'ember', x: x + (tx - x) * f * 0.3, y: y - 18 + (ty - 12 - y + 18) * f * 0.3, vx: (tx - x) * (1.6 + Math.random()) + (Math.random() - .5) * 60, vy: (ty - y) * (1.6 + Math.random()) + (Math.random() - .5) * 60, t: 0.45, T: 0.45, c: Math.random() < .5 ? '#ff6a1a' : '#ffd447', s: 3 + Math.random() * 4, rot: 0 }); }
       setTimeout(() => { if (!G || G.over) return; inRange(tx, ty, 75).forEach(m => damage(m, D * 6)); boom(tx, ty - 10, 75, '#ff7a2a', 'fire'); G.shake = Math.max(G.shake, 5); SFX.boss(); }, 200); }
@@ -444,23 +447,46 @@
     if (m.hp < m.max || m.mbo){ const w = m.boss ? 44 : m.mbo ? 32 : 20; ctx.fillStyle = '#000b'; rr(x - w / 2 - 1, y - h - 6, w + 2, 5, 2); ctx.fill(); ctx.fillStyle = m.boss ? '#ff4a4a' : '#7cf07c'; rr(x - w / 2, y - h - 5, w * Math.max(0, m.hp / m.max), 3, 1.5); ctx.fill(); }
   }
   function drawUnit(s, x, y, canMerge, sc = 1){
-    const R = RAR[s.u.r], pop = 1 + s.pop * 0.35;
-    const a = s.atk || 0, ph = a > 0 ? 1 - a / 0.24 : 1;   // 0..1 attack progress
-    const lunge = a > 0 ? Math.sin(ph * Math.PI) * (s.u.kind === 'melee' ? 7 : 3) : 0;
-    const lx = lunge * Math.cos(s.ang || 0), ly = lunge * Math.sin(s.ang || 0) * 0.6;
-    const sqx = a > 0 ? 1 + Math.sin(ph * Math.PI) * 0.1 : 1 + Math.sin(G.t * 2.4 + x) * 0.015, sqy = a > 0 ? 1 - Math.sin(ph * Math.PI) * 0.08 : 1 - Math.sin(G.t * 2.4 + x) * 0.015;
+    const R = RAR[s.u.r], pop = 1 + s.pop * 0.35, K2 = s.u.kind, face = s.face || 1;
+    const a = s.atk || 0, ph = a > 0 ? 1 - a / AT : 0, c = s.cast || 0, cp = c > 0 ? 1 - c / CT : 0;
+    const ease = t => t * t * (3 - 2 * t), seg = (t, a0, a1) => Math.max(0, Math.min(1, (t - a0) / (a1 - a0)));
+    let rot = 0, ox = 0, oy = 0, sx = 1 + Math.sin(G.t * 2.4 + x) * 0.015, sy = 2 - sx, pose = false;
+    const fx = Math.cos(s.ang || 0), fy = Math.sin(s.ang || 0);
+    if (a > 0){ const w = ease(seg(ph, 0, 0.45)), st = seg(ph, 0.45, 0.62), rc = ease(seg(ph, 0.62, 1));
+      if (K2 === 'melee'){ const fwd = st > 0 ? 1 - rc : 0;
+        rot = (w * 0.38 * (1 - st) - fwd * 0.5) * face; ox = -fx * 4 * w * (1 - st) + fx * 13 * fwd; oy = fy * 6 * fwd - 2 * w * (1 - st);
+        sx *= 1 - 0.08 * w * (1 - st) + 0.14 * fwd; sy *= 1 + 0.08 * w * (1 - st) - 0.1 * fwd; pose = ph > 0.35 && ph < 0.85; }
+      else if (K2 === 'arrow' || K2 === 'multi'){ const rec = st > 0 ? 1 - rc : 0;
+        rot = 0.12 * w * (1 - st) * face; ox = -fx * (3 * w * (1 - st) + 6 * rec); sx *= 1 + 0.05 * w; sy *= 1 - 0.05 * w + 0.06 * rec; pose = ph > 0.08 && ph < 0.8; }
+      else { const rise = Math.sin(Math.min(1, ph / 0.7) * Math.PI); oy = -7 * rise; rot = -0.12 * (st > 0 ? 1 - rc : 0) * face; sx *= 1 + 0.08 * (st > 0 ? 1 - rc : 0); sy *= 1 + 0.06 * w * (1 - st); pose = ph > 0.2 && ph < 0.85; } }
+    if (c > 0){ const j = Math.sin(Math.min(1, cp / 0.55) * Math.PI * 0.5) * (1 - seg(cp, 0.6, 1)); oy -= 16 * j; sx *= 1 + 0.25 * j; sy *= 1 + 0.25 * j; pose = cp > 0.15; rot = -0.08 * Math.sin(cp * 20) * j; }
     ctx.save(); ctx.translate(x, y); ctx.scale(sc * pop, sc * pop);
     // rarity ring on slot
     ctx.strokeStyle = R.c; ctx.lineWidth = 2; ctx.globalAlpha = 0.9; ctx.shadowColor = R.c; ctx.shadowBlur = s.u.r >= 2 ? 10 + 5 * Math.sin(G.t * 4) : 3;
     ctx.beginPath(); ctx.ellipse(0, 14, 17, 5.5, 0, 0, 6.28); ctx.stroke(); ctx.shadowBlur = 0; ctx.globalAlpha = 1;
-    ctx.fillStyle = 'rgba(0,0,0,.3)'; ctx.beginPath(); ctx.ellipse(lx * 0.5, 15, 13, 4, 0, 0, 6.28); ctx.fill();
+    // casting magic circle + light pillar
+    if (c > 0){ const k = Math.sin(Math.min(1, cp * 1.6) * Math.PI * 0.5) * (1 - seg(cp, 0.8, 1)), rr2 = 30 * k; ctx.save(); ctx.translate(0, 14); ctx.scale(1, 0.38); ctx.rotate(G.t * 3);
+        ctx.strokeStyle = '#ff9ac0'; ctx.shadowColor = '#ff6aa0'; ctx.shadowBlur = 14; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(0, 0, rr2, 0, 6.28); ctx.stroke(); ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(0, 0, rr2 * 0.7, 0, 6.28); ctx.stroke();
+        for (let q = 0; q < 6; q++){ const an = q * 1.047; ctx.beginPath(); ctx.moveTo(Math.cos(an) * rr2 * 0.7, Math.sin(an) * rr2 * 0.7); ctx.lineTo(Math.cos(an + 2.09) * rr2 * 0.7, Math.sin(an + 2.09) * rr2 * 0.7); ctx.stroke(); } ctx.restore(); ctx.shadowBlur = 0;
+      const g = ctx.createLinearGradient(0, 14, 0, -80); g.addColorStop(0, `rgba(255,150,200,${0.55 * k})`); g.addColorStop(1, 'rgba(255,150,200,0)'); ctx.fillStyle = g; ctx.fillRect(-18 * k, -80, 36 * k, 94);
+      if (Math.random() < 0.6) G.fx.push({ k: 'ember', x: x + (Math.random() - .5) * 30 * sc, y: y + 10 * sc, vx: 0, vy: -90 - Math.random() * 60, t: 0.5, T: 0.5, c: '#ffb0d0', s: 1.5 + Math.random() * 2, rot: 0 }); }
+    // mage charge glow at feet
+    if (a > 0 && K2 !== 'melee' && K2 !== 'arrow' && K2 !== 'multi'){ const k = Math.sin(Math.min(1, ph / 0.6) * Math.PI); ctx.globalAlpha = 0.7 * k; ctx.strokeStyle = R.c; ctx.lineWidth = 2; ctx.beginPath(); ctx.ellipse(0, 14, 20 * k + 4, 7 * k + 2, 0, 0, 6.28); ctx.stroke(); ctx.globalAlpha = 1; }
+    ctx.fillStyle = 'rgba(0,0,0,.3)'; ctx.beginPath(); ctx.ellipse(ox * 0.5, 15, 13, 4, 0, 0, 6.28); ctx.fill();
     if (s.u.r >= 3){ for (let q = 0; q < 2; q++){ const t = (G.t * 0.8 + q * 0.5 + x * 0.01) % 1; ctx.globalAlpha = 1 - t; ctx.fillStyle = R.c; ctx.beginPath(); ctx.arc(Math.sin(t * 9 + q * 3) * 12, 12 - t * 34, 1.6, 0, 6.28); ctx.fill(); } ctx.globalAlpha = 1; }
-    const im = ART['u_' + s.u.id];
-    if (im){ const h = 42 + s.u.r * 1.5, w = h * im.width / im.height;
-      ctx.save(); ctx.translate(lx, 16 + ly); ctx.scale((s.face || 1) * sqx, sqy); ctx.drawImage(im, -w / 2, -h, w, h);
+    const base = ART['u_' + s.u.id], im = (pose && ART['ua_' + s.u.id]) || base;
+    if (im){ const hb = 42 + s.u.r * 1.5, h = im !== base && base ? hb * im.height / base.height : hb, w = h * im.width / im.height;
+      ctx.save(); ctx.translate(ox, 16 + oy); ctx.rotate(rot); ctx.scale(face * sx, sy); ctx.drawImage(im, -w / 2, -h, w, h);
       if (s.pop > 0){ ctx.globalAlpha = s.pop; ctx.drawImage(whiteOf(im), -w / 2, -h, w, h); ctx.globalAlpha = 1; }
+      if (c > 0 && cp > 0.4 && cp < 0.6){ ctx.globalAlpha = 0.6; ctx.drawImage(whiteOf(im), -w / 2, -h, w, h); ctx.globalAlpha = 1; }
       ctx.restore(); }
     else { ctx.fillStyle = R.c; ctx.beginPath(); ctx.arc(0, 0, 19, 0, 6.28); ctx.fill(); ctx.font = '22px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(s.u.e, 0, 1); ctx.textBaseline = 'alphabetic'; }
+    // melee weapon trail at the unit
+    if (a > 0 && K2 === 'melee'){ const st = seg(ph, 0.45, 0.7); if (st > 0 && st < 1){ ctx.save(); ctx.translate(fx * 14, -14 + fy * 6); ctx.rotate((s.ang || 0)); ctx.globalAlpha = 1 - st;
+        ctx.fillStyle = R.c; ctx.shadowColor = R.c; ctx.shadowBlur = 10; const a0 = -1.6 + st * 1.4, a1 = a0 + 1.9; ctx.beginPath(); ctx.arc(0, 0, 20, a0, a1); ctx.arc(-3, 0, 15, a1, a0, true); ctx.fill();
+        ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(0, 0, 20, a0 + 0.4, a1); ctx.arc(-1.5, 0, 18, a1, a0 + 0.4, true); ctx.fill(); ctx.restore(); ctx.shadowBlur = 0; ctx.globalAlpha = 1; } }
+    // archer string flash
+    if (a > 0 && (K2 === 'arrow' || K2 === 'multi')){ const st = seg(ph, 0.45, 0.6); if (st > 0 && st < 1){ ctx.globalAlpha = 1 - st; ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(fx * 10, -16 + fy * 6, 6 + st * 10, 0, 6.28); ctx.stroke(); ctx.globalAlpha = 1; } }
     const SKd = SKILL[s.u.id]; if (SKd){ const f = Math.min(1, (s.sk || 0) / SKd.cd); ctx.fillStyle = '#000a'; rr(-15, 21, 30, 4, 2); ctx.fill(); ctx.fillStyle = f >= 0.95 ? '#fff' : '#ff6a8a'; rr(-15, 21, 30 * f, 4, 2); ctx.fill(); }
     if (canMerge){ ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.5; ctx.setLineDash([3, 3]); ctx.lineDashOffset = -G.t * 10; ctx.beginPath(); ctx.ellipse(0, 14, 21, 7, 0, 0, 6.28); ctx.stroke(); ctx.setLineDash([]);
       ctx.fillStyle = '#fff'; ctx.font = '900 10px sans-serif'; ctx.textAlign = 'center'; ctx.fillText('▲', 15, -24 + Math.sin(G.t * 5) * 2); }
