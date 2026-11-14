@@ -108,16 +108,15 @@
 
   const WH = new Map(); function whiteOf(im){ let c = WH.get(im); if (c) return c; c = document.createElement('canvas'); c.width = im.width; c.height = im.height; const x = c.getContext('2d'); x.drawImage(im, 0, 0); x.globalCompositeOperation = 'source-in'; x.fillStyle = '#fff'; x.fillRect(0, 0, c.width, c.height); WH.set(im, c); return c; }
   // ---------- board ----------
-  const COLS = 6, ROWS = 3, CELL = 50, GX = (LW - COLS * CELL) / 2, GY = 250;
-  const PAD = 26;                                   // path ring distance from grid
-  const P = { x0: GX - PAD, y0: GY - PAD, x1: GX + COLS * CELL + PAD, y1: GY + ROWS * CELL + PAD };
-  const PW = P.x1 - P.x0, PH = P.y1 - P.y0, PLEN = 2 * (PW + PH);
-  function pathPos(d){ d = ((d % PLEN) + PLEN) % PLEN;
+  const COLS = 6, ROWS = 3, CELL = 44, PAD = 20, ROADW = 28;
+  function mkF(gy){ const gx = (LW - COLS * CELL) / 2, P = { x0: gx - PAD, y0: gy - PAD, x1: gx + COLS * CELL + PAD, y1: gy + ROWS * CELL + PAD }, PW = P.x1 - P.x0, PH = P.y1 - P.y0; return { GX: gx, GY: gy, P, PW, PH, PLEN: 2 * (PW + PH) }; }
+  const FL = [mkF(300), mkF(96)], GX = FL[0].GX, GY = FL[0].GY;
+  function pathPos(d, f = 0){ const F = FL[f], P = F.P, PW = F.PW, PH = F.PH, PLEN = F.PLEN; d = ((d % PLEN) + PLEN) % PLEN;
     if (d < PW) return [P.x0 + d, P.y0]; d -= PW;
     if (d < PH) return [P.x1, P.y0 + d]; d -= PH;
     if (d < PW) return [P.x1 - d, P.y1]; d -= PW;
     return [P.x0, P.y1 - d]; }
-  const cellXY = i => [GX + (i % COLS) * CELL + CELL / 2, GY + Math.floor(i / COLS) * CELL + CELL / 2];
+  const cellXY = (i, f = 0) => [FL[f].GX + (i % COLS) * CELL + CELL / 2, FL[f].GY + Math.floor(i / COLS) * CELL + CELL / 2];
 
   // ---------- units ----------
   const RAR = [
@@ -187,7 +186,7 @@
   // ---------- state ----------
   let G;
   function newGame(kind = 'normal'){
-    G = { kind, pt: { silver: 120, cost: 20, grid: Array(9).fill(null), think: 1.5 }, dead: [], shake: 0, t: 0, wave: 0, waveT: 3, spawnLeft: 0, spawnT: 0, silver: 120 + TL('purse') * 25, cost: Math.max(10, 20 - TL('bell')), luck: TL('clover') ? Math.floor(TL('clover') / 2) + 1 : 0, hpm: MODES[M.mode].hp, mode: M.mode, up: [0, 0, 0, 0], panel: null, mis: [0, 0, 0], speed: 1, flash: 0, flashC: '255,255,255', grid: Array(COLS * ROWS).fill(null),
+    G = { kind, pt: { silver: 120, cost: 20, grid: Array(18).fill(null), think: 1.5 }, bossP: null, dead: [], shake: 0, t: 0, wave: 0, waveT: 3, spawnLeft: 0, spawnT: 0, silver: 120 + TL('purse') * 25, cost: Math.max(10, 20 - TL('bell')), luck: TL('clover') ? Math.floor(TL('clover') / 2) + 1 : 0, hpm: MODES[M.mode].hp, mode: M.mode, up: [0, 0, 0, 0], panel: null, mis: [0, 0, 0], speed: 1, flash: 0, flashC: '255,255,255', grid: Array(COLS * ROWS).fill(null),
           mobs: [], shots: [], fx: [], texts: [], over: false, kills: 0, bossAlive: null, drag: null, sel: -1 };
   }
   const CAP = 100;
@@ -198,22 +197,22 @@
   function startWave(){
     G.wave++; G.waveT = G.wave % 10 === 0 ? 45 : 20; if (G.wave > 1) G.luck += 1;
     if (G.kind === 'raid'){ G.waveT = 30; const b = BOSSES[(G.wave - 1) % BOSSES.length], hp = mobHp(6 + G.wave * 4) * 30; SFX.boss();
-      if (G.bossAlive && G.bossAlive.hp > 0){ gameOver(); return; }
-      const m = { d: 0, hp, max: hp, spd: 20, boss: true, type: b, slowT: 0, hit: 0, id: Math.random() }; G.mobs.push(m); G.bossAlive = m; banner(`레이드 ${G.wave}단계`, '#ff5a5a'); return; }
-    if (G.kind === 'hunt'){ G.waveT = 12; G.spawnLeft = Math.floor(WAVE_N(G.wave) * 1.5); G.spawnT = 0; banner(`사냥 ${G.wave}`, '#8cf08c'); return; }
+      if ((G.bossAlive && G.bossAlive.hp > 0) || (G.bossP && G.bossP.hp > 0)){ gameOver(); return; }
+      const m = { f: 0, d: 0, hp, max: hp, spd: 20, boss: true, type: b, slowT: 0, hit: 0, id: Math.random() }, m2 = { ...m, f: 1, id: Math.random() }; G.mobs.push(m, m2); G.bossAlive = m; G.bossP = m2; banner(`레이드 ${G.wave}단계`, '#ff5a5a'); return; }
+    if (G.kind === 'hunt'){ G.waveT = 12; G.spawnLeft = Math.floor(WAVE_N(G.wave) * 0.9); G.spawnT = 0; banner(`사냥 ${G.wave}`, '#8cf08c'); return; }
     if (G.wave % 10 === 0){
       const b = BOSSES[(G.wave / 10 - 1) % BOSSES.length], hp = mobHp(G.wave) * 28; SFX.boss();
-      const m = { d: 0, hp, max: hp, spd: 22, boss: true, type: b, slowT: 0, hit: 0, id: Math.random() };
-      G.mobs.push(m); G.bossAlive = m; G.spawnLeft = 0;
+      const m = { f: 0, d: 0, hp, max: hp, spd: 22, boss: true, type: b, slowT: 0, hit: 0, id: Math.random() }, m2 = { ...m, f: 1, id: Math.random() };
+      G.mobs.push(m, m2); G.bossAlive = m; G.bossP = m2; G.spawnLeft = 0;
       banner(`BOSS ${G.wave}웨이브`, '#ff5a5a');
     } else {
-      G.spawnLeft = WAVE_N(G.wave); G.spawnT = 0;
+      G.spawnLeft = Math.ceil(WAVE_N(G.wave) * 0.6); G.spawnT = 0;
       banner(`${G.wave} 웨이브`, '#ffd447');
     }
   }
   function spawnMob(){
     const type = MOBS[Math.floor((G.wave - 1) / 3) % MOBS.length], hp = mobHp(G.wave);
-    G.mobs.push({ d: 0, hp, max: hp, spd: 34 + Math.min(30, G.wave * 0.6), type, slowT: 0, hit: 0, id: Math.random() });
+    for (let f = 0; f < 2; f++) G.mobs.push({ f, d: 0, hp, max: hp, spd: 34 + Math.min(30, G.wave * 0.6), type, slowT: 0, hit: 0, id: Math.random() });
   }
 
   function summon(){
@@ -232,8 +231,8 @@
   function sell(i){ const s = G.grid[i]; if (!s) return; G.silver += [10, 30, 90, 270, 800][s.u.r]; G.grid[i] = null; }
 
   // ---------- combat ----------
-  const mobXY = m => pathPos(m.d);
-  function inRange(x, y, rng){ return G.mobs.filter(m => { const [mx, my] = mobXY(m); return (mx - x) ** 2 + (my - y) ** 2 <= rng * rng; }); }
+  const mobXY = m => pathPos(m.d, m.f || 0);
+  function inRange(x, y, rng, f = 0){ return G.mobs.filter(m => { if ((m.f || 0) !== f) return false; const [mx, my] = mobXY(m); return (mx - x) ** 2 + (my - y) ** 2 <= rng * rng; }); }
   function front(list){ return list.sort((a, b) => b.d - a.d); }
   function place(i, u){ G.grid[i] = { u, cd: 0.3, pop: 1 }; if (!M.seen[u.id]){ M.seen[u.id] = 1; } if (u.r === 4) qAdd('myth'); const [x, y] = cellXY(i), r = u.r; burst(x, y, RAR[r].c, [8, 18, 30, 44, 60][r]);
     if (r >= 1) float(RAR[r].n + '!', x, y - 26, RAR[r].c);
@@ -249,28 +248,27 @@
   function damage(m, dmg){ if (m.hp <= 0) return; const crit = Math.random() < 0.12 + TL('whet') * 0.02; if (crit) dmg *= 2.5; if (m.boss || m.mbo) dmg *= 1 + TL('giant') * 0.15; m.hp -= dmg; m.hit = 0.12; m.kb = crit ? 1 : 0.6; if (crit && dmg > 400) G.shake = Math.max(G.shake, 2.5);
     if (crit || m.boss || Math.random() < 0.2){ const [x, y] = mobXY(m); G.texts.push({ s: fmt(dmg) + (crit ? '!' : ''), x: x + (Math.random() - .5) * 14, y: y - (m.boss ? 50 : 30), t: 0.7, c: crit ? '#ffd447' : '#fff', big: crit }); }
     if (m.hp <= 0) kill(m); }
-  function kill(m){ G.kills++; if (m.mbo && m.life > 0){ MISS[m.mission].fn(); banner('미션 성공! ' + MISS[m.mission].rw, '#6ee07a'); SFX.myth(); } const [x, y] = mobXY(m), gain = m.boss ? 100 + G.wave * 5 : m.mbo ? 20 : 4 + Math.floor(G.wave / 5); G.silver += gain; G.pt.silver += gain * 0.9;
+  function kill(m){ G.kills++; if (m.mbo && m.life > 0){ MISS[m.mission].fn(); banner('미션 성공! ' + MISS[m.mission].rw, '#6ee07a'); SFX.myth(); } const [x, y] = mobXY(m), gain = m.boss ? 100 + G.wave * 5 : m.mbo ? 20 : 4 + Math.floor(G.wave / 5); if (m.f === 1) G.pt.silver += gain; else G.silver += gain;
     G.dead.push({ n: (m.boss ? 'boss_' : 'mob_') + m.type, x, y: y + 6, vy: -120, t: 0.45, T: 0.45, h: m.boss ? 46 : m.mbo ? 36 : 26, flip: m.flip, spin: (Math.random() - .5) * 6 });
     for (let i = 0; i < (m.boss ? 18 : 6); i++){ const a = Math.random() * 6.28, v = 20 + Math.random() * 50; G.fx.push({ k: 'puff', x, y: y - 8, vx: Math.cos(a) * v, vy: Math.sin(a) * v - 20, t: 0.5, T: 0.5, s: 4 + Math.random() * 5 }); }
     G.texts.push({ s: '+' + gain, x, y: y - 20, t: 0.6, c: '#ffe27a' }); if (m.boss) G.shake = 8;
-    burst(x, y, m.boss ? '#ffd447' : '#fff', m.boss ? 40 : 0); if (m === G.bossAlive){ G.bossAlive = null; qAdd('boss'); G.bosses = (G.bosses || 0) + 1; G.luck += 3; banner('보스 처치! 🍀+3', '#6ee07a'); G.flash = 0.5; G.flashC = '255,230,120'; SFX.myth(); G.waveT = Math.min(G.waveT, 4); } }
+    burst(x, y, m.boss ? '#ffd447' : '#fff', m.boss ? 40 : 0); if (m === G.bossP){ G.bossP = null; burst(x, y, '#ffd447', 30); } if (m === G.bossAlive){ G.bossAlive = null; qAdd('boss'); G.bosses = (G.bosses || 0) + 1; G.luck += 3; banner('보스 처치! 🍀+3', '#6ee07a'); G.flash = 0.5; G.flashC = '255,230,120'; SFX.myth(); G.waveT = Math.min(G.waveT, 4); } }
   const FIRE = { fire3: 1, drag5: 1, arch5: 1 };
   const AT = 0.34, CT = 0.95;
-  function tickUnit(s, dt, x, y, bonus, mul){ s.pop = Math.max(0, s.pop - dt * 3); s.atk = Math.max(0, (s.atk || 0) - dt); s.cast = Math.max(0, (s.cast || 0) - dt); s.cd -= dt;
+  function tickUnit(s, dt, x, y, bonus, mul, f = 0){ s.pop = Math.max(0, s.pop - dt * 3); s.atk = Math.max(0, (s.atk || 0) - dt); s.cast = Math.max(0, (s.cast || 0) - dt); s.cd -= dt;
     if (s.pend && s.atk <= AT * 0.5){ const f = s.pend; s.pend = null; f(); }
     if (s.cpend && s.cast <= CT * 0.45){ const f = s.cpend; s.cpend = null; f(); }
-    if (s.cd <= 0 && !s.cast && !s.pend){ const list = front(inRange(x, y, s.u.rng + bonus)); if (list.length){ const [tx, ty] = mobXY(list[0]);
-      s.face = tx > x + 4 ? -1 : 1; s.ang = Math.atan2(ty - 10 - (y - 14), tx - x); s.atk = AT; s.pend = () => attack(s, x, y, bonus, mul); s.cd = Math.max(AT + 0.05, 1 / s.u.spd); } }
-    const SK = SKILL[s.u.id]; if (SK){ s.sk = (s.sk || 0) + dt; if (s.sk >= SK.cd && G.mobs.length && !s.cast){ s.sk = 0; s.cast = CT; s.atk = 0; s.pend = null; float(SK.n + '!', x, y - 40, '#ff8aa8'); SFX.rare(); s.cpend = () => castSkill(s, x, y, mul); } } }
-  const PX = i => 38 + i * 35.5, PY = 178;
-  function attack(s, x, y, bonus = 0, mul = 1){
-    const U = s.u, list = front(inRange(x, y, U.rng + bonus)); if (!list.length) return false;
+    if (s.cd <= 0 && !s.cast && !s.pend){ const list = front(inRange(x, y, s.u.rng + bonus, f)); if (list.length){ const [tx, ty] = mobXY(list[0]);
+      s.face = tx > x + 4 ? -1 : 1; s.ang = Math.atan2(ty - 10 - (y - 14), tx - x); s.atk = AT; s.pend = () => attack(s, x, y, bonus, mul, f); s.cd = Math.max(AT + 0.05, 1 / s.u.spd); } }
+    const SK = SKILL[s.u.id]; if (SK){ s.sk = (s.sk || 0) + dt; if (s.sk >= SK.cd && G.mobs.some(m => (m.f || 0) === f) && !s.cast){ s.sk = 0; s.cast = CT; s.atk = 0; s.pend = null; float(SK.n + '!', x, y - 40, '#ff8aa8'); SFX.rare(); s.cpend = () => castSkill(s, x, y, mul, f); } } }
+    function attack(s, x, y, bonus = 0, mul = 1, f = 0){
+    const U = s.u, list = front(inRange(x, y, U.rng + bonus, f)); if (!list.length) return false;
     const D = U.dmg * upMul(U.id) * grpMul(U.r) * (1 + TL('scroll') * 0.05) * mul, t = list[0], [tx, ty] = mobXY(t), c = RAR[U.r].c, ang = Math.atan2(ty - 10 - (y - 14), tx - x);
     s.face = tx > x + 4 ? -1 : 1; s.ang = ang;
     const sy = y - 18;
     if (U.kind === 'melee'){ damage(t, D); G.fx.push({ k: 'swipe', x: tx, y: ty - 12, a: ang, t: 0.22, T: 0.22, c, r: 16 + U.r * 3 }); spark(tx, ty - 12, c, 5 + U.r * 2); }
-    else if (U.kind === 'arrow' || U.kind === 'multi'){ (U.kind === 'multi' ? list.slice(0, U.n) : [t]).forEach((m, k) => G.shots.push({ k: U.id === 'star5' ? 'star' : 'arrow', x: x + (k - 1) * 3, y: sy, tgt: m, dmg: D, sp: 560, c, trail: [] })); }
-    else if (U.kind === 'magic' || U.kind === 'slow'){ G.shots.push({ k: U.kind === 'slow' ? 'ice' : FIRE[U.id] ? 'fire' : 'orb', x, y: sy, tx, ty, tgt: t, dmg: D, sp: 300, c: U.kind === 'slow' ? '#9fe8ff' : FIRE[U.id] ? '#ff8a2a' : c, aoe: U.aoe, slow: U.slow, trail: [], big: U.r >= 3 }); }
+    else if (U.kind === 'arrow' || U.kind === 'multi'){ (U.kind === 'multi' ? list.slice(0, U.n) : [t]).forEach((m, k) => G.shots.push({ f, k: U.id === 'star5' ? 'star' : 'arrow', x: x + (k - 1) * 3, y: sy, tgt: m, dmg: D, sp: 560, c, trail: [] })); }
+    else if (U.kind === 'magic' || U.kind === 'slow'){ G.shots.push({ f, k: U.kind === 'slow' ? 'ice' : FIRE[U.id] ? 'fire' : 'orb', x, y: sy, tx, ty, tgt: t, dmg: D, sp: 300, c: U.kind === 'slow' ? '#9fe8ff' : FIRE[U.id] ? '#ff8a2a' : c, aoe: U.aoe, slow: U.slow, trail: [], big: U.r >= 3 }); }
     else if (U.kind === 'chain'){ let px = x, py = sy; list.slice(0, U.n).forEach(m => { const [mx, my] = mobXY(m); damage(m, D); if (U.slow) m.slowT = 1.2;
       const pts = [[px, py]]; for (let q = 1; q < 6; q++){ const f = q / 6; pts.push([px + (mx - px) * f + (Math.random() - .5) * 16, py + (my - 12 - py) * f + (Math.random() - .5) * 16]); } pts.push([mx, my - 12]);
       G.fx.push({ k: 'bolt', pts, t: 0.2, T: 0.2, c: U.id === 'arch5' ? '#ff9af0' : '#fff27a' }); spark(mx, my - 12, '#fff6a0', 6); px = mx; py = my - 12; }); }
@@ -283,20 +281,20 @@
     if (u.cur === 's') G.silver -= c; else G.luck -= c; G.up[k]++; SFX.merge(); float(`${u.n} Lv.${G.up[k]}`, LW / 2, 470, u.c); }
   const MISS = [ { n: '고블린 대장', type: 'goblin', hp: 15, rw: '🍀 2', fn: () => G.luck += 2 }, { n: '해골 장군', type: 'skeleton', hp: 45, rw: '🪙 200', fn: () => G.silver += 200 }, { n: '암흑 기사', type: 'darkknight', hp: 120, rw: '🍀 5 · 🪙 300', fn: () => { G.luck += 5; G.silver += 300; } } ];
   function mission(k){ if (G.mis[k] > 0 || G.wave < 1) return; const hp = mobHp(Math.max(3, G.wave)) * MISS[k].hp; G.mis[k] = 60;
-    G.mobs.push({ d: 0, hp, max: hp, spd: 28, mbo: true, mission: k, life: 40, type: MISS[k].type, slowT: 0, hit: 0, id: Math.random() }); banner(`미션: ${MISS[k].n}`, '#ff9a5a'); SFX.boss(); G.panel = null; }
+    G.mobs.push({ f: 0, d: 0, hp, max: hp, spd: 28, mbo: true, mission: k, life: 40, type: MISS[k].type, slowT: 0, hit: 0, id: Math.random() }); banner(`미션: ${MISS[k].n}`, '#ff9a5a'); SFX.boss(); G.panel = null; }
   const SKILL = { drag5: { n: '용의 숨결', cd: 5 }, star5: { n: '별의 비', cd: 6 }, arch5: { n: '메테오', cd: 8 } };
-  function castSkill(s, x, y, mul){ const U = s.u, D = U.dmg * upMul(U.id) * grpMul(U.r) * (1 + TL('scroll') * 0.05) * mul;
-    if (U.id === 'drag5'){ const t = front(inRange(x, y, 200))[0] || front([...G.mobs])[0]; if (!t) return; const [tx, ty] = mobXY(t);
+  function castSkill(s, x, y, mul, f = 0){ const FM = G.mobs.filter(m => (m.f || 0) === f); const U = s.u, D = U.dmg * upMul(U.id) * grpMul(U.r) * (1 + TL('scroll') * 0.05) * mul;
+    if (U.id === 'drag5'){ const t = front(inRange(x, y, 200, f))[0] || front(FM)[0]; if (!t) return; const [tx, ty] = mobXY(t);
       for (let i = 0; i < 26; i++){ const f = Math.random(); G.fx.push({ k: 'ember', x: x + (tx - x) * f * 0.3, y: y - 18 + (ty - 12 - y + 18) * f * 0.3, vx: (tx - x) * (1.6 + Math.random()) + (Math.random() - .5) * 60, vy: (ty - y) * (1.6 + Math.random()) + (Math.random() - .5) * 60, t: 0.45, T: 0.45, c: Math.random() < .5 ? '#ff6a1a' : '#ffd447', s: 3 + Math.random() * 4, rot: 0 }); }
-      setTimeout(() => { if (!G || G.over) return; inRange(tx, ty, 75).forEach(m => damage(m, D * 6)); boom(tx, ty - 10, 75, '#ff7a2a', 'fire'); G.shake = Math.max(G.shake, 5); SFX.boss(); }, 200); }
-    if (U.id === 'star5'){ G.mobs.slice(0, 40).forEach((m, k) => { const [mx, my] = mobXY(m); G.fx.push({ k: 'fall', x: mx + (Math.random() - .5) * 10, y0: my - 120, y: my - 12, t: 0.4 + k * 0.01, T: 0.4 + k * 0.01, c: '#fff6b0', hit: () => { if (m.hp > 0){ damage(m, D * 2.5); spark(mx, my - 12, '#ffd447', 4); } } }); }); SFX.epic(); }
-    if (U.id === 'arch5'){ const t = [...G.mobs].sort((a, b) => b.hp - a.hp)[0]; if (!t) return; const [tx, ty] = mobXY(t);
-      G.fx.push({ k: 'meteor', x: tx, y: ty - 12, t: 0.55, T: 0.55, c: '#ff8a3a', hit: () => { inRange(tx, ty, 85).forEach(m => { damage(m, D * 10); m.stun = 1.6; }); boom(tx, ty - 10, 90, '#ff6a2a', 'fire'); boom(tx, ty - 10, 50, '#fff0a0', 'fire'); G.shake = 9; G.flash = 0.35; G.flashC = '255,160,80'; SFX.boss(); } }); }
+      setTimeout(() => { if (!G || G.over) return; inRange(tx, ty, 75, f).forEach(m => damage(m, D * 6)); boom(tx, ty - 10, 75, '#ff7a2a', 'fire'); G.shake = Math.max(G.shake, 5); SFX.boss(); }, 200); }
+    if (U.id === 'star5'){ FM.slice(0, 40).forEach((m, k) => { const [mx, my] = mobXY(m); G.fx.push({ k: 'fall', x: mx + (Math.random() - .5) * 10, y0: my - 120, y: my - 12, t: 0.4 + k * 0.01, T: 0.4 + k * 0.01, c: '#fff6b0', hit: () => { if (m.hp > 0){ damage(m, D * 2.5); spark(mx, my - 12, '#ffd447', 4); } } }); }); SFX.epic(); }
+    if (U.id === 'arch5'){ const t = FM.sort((a, b) => b.hp - a.hp)[0]; if (!t) return; const [tx, ty] = mobXY(t);
+      G.fx.push({ k: 'meteor', x: tx, y: ty - 12, t: 0.55, T: 0.55, c: '#ff8a3a', hit: () => { inRange(tx, ty, 85, f).forEach(m => { damage(m, D * 10); m.stun = 1.6; }); boom(tx, ty - 10, 90, '#ff6a2a', 'fire'); boom(tx, ty - 10, 50, '#fff0a0', 'fire'); G.shake = 9; G.flash = 0.35; G.flashC = '255,160,80'; SFX.boss(); } }); }
   }
   function partnerAI(dt){ const T = G.pt; T.think -= dt; if (T.think > 0) return; T.think = 0.8;
     const free = T.grid.map((u, i) => u ? -1 : i).filter(i => i >= 0);
-    for (const rc of RECIPES){ if (rc.need.every(id => T.grid.some(s => s && s.u.id === id))){ let spot = -1; rc.need.forEach(id => { const i = T.grid.findIndex(s => s && s.u.id === id); if (spot < 0) spot = i; T.grid[i] = null; }); T.grid[spot] = { u: UB(rc.out), cd: 0.3, pop: 1 }; burst(PX(spot), PY, '#ff6a8a', 40); float('동료 신화 탄생!', PX(spot), PY - 30, '#ff8aa8'); SFX.myth(); return; } }
-    for (let a = 0; a < 9; a++) for (let b = a + 1; b < 9; b++){ const A = T.grid[a], B = T.grid[b]; if (A && B && A.u.id === B.u.id && A.u.r < 3){ T.grid[a] = null; const u = pick(byRar(A.u.r + 1)); T.grid[b] = { u, cd: 0.3, pop: 1 }; burst(PX(b), PY, RAR[u.r].c, 16); return; } }
+    for (const rc of RECIPES){ if (rc.need.every(id => T.grid.some(s => s && s.u.id === id))){ let spot = -1; rc.need.forEach(id => { const i = T.grid.findIndex(s => s && s.u.id === id); if (spot < 0) spot = i; T.grid[i] = null; }); T.grid[spot] = { u: UB(rc.out), cd: 0.3, pop: 1 }; { const [qx, qy] = cellXY(spot, 1); burst(qx, qy, '#ff6a8a', 40); float('동료 신화 탄생!', qx, qy - 30, '#ff8aa8'); } SFX.myth(); return; } }
+    for (let a = 0; a < 18; a++) for (let b = a + 1; b < 18; b++){ const A = T.grid[a], B = T.grid[b]; if (A && B && A.u.id === B.u.id && A.u.r < 3){ T.grid[a] = null; const u = pick(byRar(A.u.r + 1)); T.grid[b] = { u, cd: 0.3, pop: 1 }; { const [qx, qy] = cellXY(b, 1); burst(qx, qy, RAR[u.r].c, 16); } return; } }
     if (free.length && T.silver >= T.cost){ T.silver -= T.cost; T.cost += 1; const roll = Math.random(), r = roll < 0.012 ? 2 : roll < 0.14 ? 1 : 0; const i = pick(free); T.grid[i] = { u: pick(byRar(r)), cd: 0.3, pop: 1 }; return; }
     if (!free.length){ let lo = -1; T.grid.forEach((s, i) => { if (s && s.u.r === 0 && lo < 0) lo = i; }); if (lo >= 0 && T.silver < T.cost){ T.grid[lo] = null; T.silver += 10; } } }
   function spark(x, y, c, n){ for (let i = 0; i < n; i++){ const a = Math.random() * 6.28, v = 80 + Math.random() * 140; G.fx.push({ k: 'sp', x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v - 30, t: 0.3, T: 0.3, c }); } }
@@ -322,12 +320,12 @@
     G.mobs.forEach(m => { if (m.mbo){ m.life -= dt; if (m.life <= 0 && m.hp > 0){ m.hp = 0; float('미션 실패...', LW / 2, 200, '#ff8a8a'); } } });
     G.mobs = G.mobs.filter(m => m.hp > 0);
     G.grid.forEach((s, i) => { if (!s) return; tickUnit(s, dt, ...cellXY(i), 0, 1); });
-    G.pt.grid.forEach((s, i) => { if (!s) return; tickUnit(s, dt, PX(i), PY, 46, 0.6); });
+    G.pt.grid.forEach((s, i) => { if (!s) return; tickUnit(s, dt, ...cellXY(i, 1), 0, 0.85, 1); });
     G.shots.forEach(b => { const [tx, ty] = b.tgt.hp > 0 ? (([u, v]) => [u, v - 12])(mobXY(b.tgt)) : [b.tx ?? b.x, b.ty ?? b.y]; b.tx = tx; b.ty = ty;
       const dx = tx - b.x, dy = ty - b.y, dd = Math.hypot(dx, dy), st = b.sp * dt;
       b.trail.push([b.x, b.y]); if (b.trail.length > 7) b.trail.shift(); b.a = Math.atan2(dy, dx);
       if (dd <= st){ b.done = true;
-        if (b.aoe){ inRange(tx, ty, b.aoe).forEach(m => { damage(m, b.dmg); if (b.slow) m.slowT = 1.5; }); boom(tx, ty - 10, b.aoe, b.c, b.k); if (b.big) G.shake = Math.max(G.shake, 3); }
+        if (b.aoe){ inRange(tx, ty, b.aoe, b.f || 0).forEach(m => { damage(m, b.dmg); if (b.slow) m.slowT = 1.5; }); boom(tx, ty - 10, b.aoe, b.c, b.k); if (b.big) G.shake = Math.max(G.shake, 3); }
         else { if (b.tgt.hp > 0) damage(b.tgt, b.dmg); spark(tx, ty - 12, b.c, 4); } }
       else { b.x += dx / dd * st; b.y += dy / dd * st; } });
     G.shots = G.shots.filter(b => !b.done);
@@ -335,7 +333,7 @@
     G.dead.forEach(d => { d.t -= dt; d.vy += 400 * dt; d.y += d.vy * dt; }); G.dead = G.dead.filter(d => d.t > 0); G.shake = Math.max(0, G.shake - dt * 20);
     G.texts.forEach(t => { t.t -= dt; t.y -= 22 * dt; }); G.texts = G.texts.filter(t => t.t > 0);
     if (bannerS){ bannerS.t -= dt; if (bannerS.t <= 0) bannerS = null; }
-    if (G.mobs.length > CAP || (G.bossAlive && G.waveT <= 0.05 && G.bossAlive.hp > 0)) gameOver();
+    if (G.mobs.length > CAP || (G.waveT <= 0.05 && ((G.bossAlive && G.bossAlive.hp > 0) || (G.bossP && G.bossP.hp > 0)))) gameOver();
   }
   function gameOver(win){ if (G.over) return; if (G.kind !== 'normal'){ G.over = true; const hunt = G.kind === 'hunt';
       const sc = hunt ? G.kills : (G.bosses || 0), gold = hunt ? Math.floor(G.kills * 2) : sc * 150, gem = hunt ? Math.floor(G.kills / 100) * 3 : sc * 4, key = hunt ? 'hb' : 'rb', nb = sc > (M[key] || 0);
@@ -359,19 +357,22 @@
     const bgi = ART.bg_field || ART.bg_1;
     if (false && bgi){ const s2 = Math.max(LW / bgi.width, LH / bgi.height); ctx.drawImage(bgi, (LW - bgi.width * s2) / 2, (LH - bgi.height * s2) / 2, bgi.width * s2, bgi.height * s2); if (!ART.bg_field){ ctx.fillStyle = 'rgba(10,8,24,.35)'; ctx.fillRect(0, 0, LW, LH); } }
     else if (!bgi){ ctx.fillStyle = '#3f7a3a'; ctx.fillRect(0, 0, LW, LH); }
-    // road ring
+    // road rings + slots (0 = me, 1 = partner)
+    if (ART.tex_road && !G.roadPat){ const c = document.createElement('canvas'); c.width = c.height = 80; c.getContext('2d').drawImage(ART.tex_road, 0, 0, 80, 80); G.roadPat = ctx.createPattern(c, 'repeat'); }
     ctx.lineJoin = 'round';
-    ctx.lineWidth = 38; ctx.strokeStyle = 'rgba(40,28,14,.45)'; rr(P.x0, P.y0 + 3, PW, PH, 14); ctx.stroke();
-    ctx.lineWidth = 36; ctx.strokeStyle = '#7a5a36'; rr(P.x0, P.y0, PW, PH, 14); ctx.stroke();
-    if (ART.tex_road){ if (!G.roadPat){ const c = document.createElement('canvas'); c.width = c.height = 96; c.getContext('2d').drawImage(ART.tex_road, 0, 0, 96, 96); G.roadPat = ctx.createPattern(c, 'repeat'); } ctx.strokeStyle = G.roadPat; }
-    else ctx.strokeStyle = '#b8a07a';
-    ctx.lineWidth = 31; rr(P.x0, P.y0, PW, PH, 14); ctx.stroke();
-    ctx.lineWidth = 31; ctx.strokeStyle = 'rgba(0,0,0,.08)'; rr(P.x0, P.y0, PW, PH, 14); ctx.stroke();
-    // inner plaza + slots
-    ctx.fillStyle = 'rgba(30,24,16,.25)'; rr(GX - 6, GY - 6, COLS * CELL + 12, ROWS * CELL + 12, 12); ctx.fill();
-    for (let i = 0; i < COLS * ROWS; i++){ const [x, y] = cellXY(i);
-      if (ART.tile_slot){ ctx.globalAlpha = G.grid[i] ? 1 : 0.85; ctx.drawImage(ART.tile_slot, x - CELL / 2 + 1, y - CELL / 2 + 1, CELL - 2, CELL - 2); ctx.globalAlpha = 1; }
-      else { ctx.fillStyle = 'rgba(20,16,40,.72)'; rr(x - CELL/2 + 2, y - CELL/2 + 2, CELL - 4, CELL - 4, 9); ctx.fill(); } }
+    FL.forEach((F, f) => { const P = F.P;
+      ctx.lineWidth = ROADW + 6; ctx.strokeStyle = 'rgba(40,28,14,.45)'; rr(P.x0, P.y0 + 3, F.PW, F.PH, 12); ctx.stroke();
+      ctx.lineWidth = ROADW + 4; ctx.strokeStyle = '#7a5a36'; rr(P.x0, P.y0, F.PW, F.PH, 12); ctx.stroke();
+      ctx.lineWidth = ROADW; ctx.strokeStyle = G.roadPat || '#b8a07a'; rr(P.x0, P.y0, F.PW, F.PH, 12); ctx.stroke();
+      if (f === 1){ ctx.lineWidth = ROADW; ctx.strokeStyle = 'rgba(40,80,140,.12)'; rr(P.x0, P.y0, F.PW, F.PH, 12); ctx.stroke(); }
+      ctx.fillStyle = f ? 'rgba(20,40,70,.3)' : 'rgba(30,24,16,.25)'; rr(F.GX - 5, F.GY - 5, COLS * CELL + 10, ROWS * CELL + 10, 10); ctx.fill();
+      const grid = f ? G.pt.grid : G.grid;
+      for (let i = 0; i < COLS * ROWS; i++){ const [x, y] = cellXY(i, f);
+        if (ART.tile_slot){ ctx.globalAlpha = grid[i] ? 1 : 0.85; ctx.drawImage(ART.tile_slot, x - CELL / 2 + 1, y - CELL / 2 + 1, CELL - 2, CELL - 2); ctx.globalAlpha = 1; }
+        else { ctx.fillStyle = 'rgba(20,16,40,.72)'; rr(x - CELL/2 + 2, y - CELL/2 + 2, CELL - 4, CELL - 4, 9); ctx.fill(); } }
+      // field tag
+      ctx.fillStyle = f ? 'rgba(20,60,110,.85)' : 'rgba(110,60,20,.85)'; const tw = f ? 92 : 50; rr(F.GX + COLS * CELL / 2 - tw / 2, F.GY + ROWS * CELL + 4, tw, 14, 7); ctx.fill();
+      ctx.fillStyle = '#fff'; ctx.font = '900 9px sans-serif'; ctx.textAlign = 'center'; ctx.fillText(f ? `🤖 AI 동료 · 🪙${Math.floor(G.pt.silver)}` : '😎 나', F.GX + COLS * CELL / 2, F.GY + ROWS * CELL + 14.5); });
     // merge hints
     const cnt = {}; G.grid.forEach(s => s && (cnt[s.u.id] = (cnt[s.u.id] || 0) + 1));
     // dead mobs
@@ -381,10 +382,7 @@
     const ents = [];
     G.mobs.forEach(m => { const [x, y] = mobXY(m); ents.push({ y, f: () => drawMob(m, x, y) }); });
     G.grid.forEach((s, i) => { if (!s || (G.drag && G.drag.moved && G.drag.i === i)) return; const [x, y] = cellXY(i); ents.push({ y: y + 14, f: () => drawUnit(s, x, y, cnt[s.u.id] >= 2 && s.u.r < 3) }); });
-    // partner strip
-    ctx.fillStyle = 'rgba(10,8,24,.55)'; rr(18, 150, LW - 36, 46, 12); ctx.fill(); ctx.strokeStyle = 'rgba(110,224,255,.35)'; ctx.lineWidth = 1.5; ctx.stroke();
-    ctx.fillStyle = '#6ee0ff'; ctx.font = '900 9px sans-serif'; ctx.textAlign = 'left'; ctx.fillText(`🤖 AI 동료 · 🪙${Math.floor(G.pt.silver)}`, 24, 146);
-    G.pt.grid.forEach((s2, i) => { if (s2) drawUnit(s2, PX(i), PY, false, 0.62); else { ctx.fillStyle = 'rgba(255,255,255,.06)'; ctx.beginPath(); ctx.arc(PX(i), PY + 4, 12, 0, 6.28); ctx.fill(); } });
+    G.pt.grid.forEach((s2, i) => { if (!s2) return; const [x, y] = cellXY(i, 1); ents.push({ y: y + 14, f: () => drawUnit(s2, x, y, false) }); });
     ents.sort((a, b) => a.y - b.y).forEach(e => e.f());
     // shots
     G.shots.forEach(b => {
@@ -430,7 +428,7 @@
     ctx.setTransform(K, 0, 0, K, OX, OY); drawHud();
   }
   function drawMob(m, x, y){
-    const h = m.boss ? 48 : m.mbo ? 36 : 27, goingLeft = y >= P.y1 - 0.5; m.flip = !goingLeft;
+    const h = m.boss ? 48 : m.mbo ? 36 : 27, goingLeft = y >= FL[m.f || 0].P.y1 - 0.5; m.flip = !goingLeft;
     const ph = m.d * 0.22 + (m.id * 10), hop = Math.abs(Math.sin(ph)) * (m.boss ? 2 : 3), tilt = Math.sin(ph) * 0.12, kb = (m.kb || 0) * 4;
     ctx.fillStyle = 'rgba(0,0,0,.28)'; ctx.beginPath(); ctx.ellipse(x, y + 5, h * 0.36 * (1 - hop * 0.04), 3.5, 0, 0, 6.28); ctx.fill();
     const im = ART[(m.boss ? 'boss_' : 'mob_') + m.type];
@@ -446,7 +444,7 @@
     if (m.mbo){ ctx.fillStyle = '#ff9a5a'; ctx.font = '900 10px sans-serif'; ctx.textAlign = 'center'; ctx.fillText(`⏱${Math.ceil(m.life)}`, x, y - h - 9); }
     if (m.hp < m.max || m.mbo){ const w = m.boss ? 44 : m.mbo ? 32 : 20; ctx.fillStyle = '#000b'; rr(x - w / 2 - 1, y - h - 6, w + 2, 5, 2); ctx.fill(); ctx.fillStyle = m.boss ? '#ff4a4a' : '#7cf07c'; rr(x - w / 2, y - h - 5, w * Math.max(0, m.hp / m.max), 3, 1.5); ctx.fill(); }
   }
-  function drawUnit(s, x, y, canMerge, sc = 1){
+  function drawUnit(s, x, y, canMerge, sc = 0.92){
     const R = RAR[s.u.r], pop = 1 + s.pop * 0.35, K2 = s.u.kind, face = s.face || 1;
     const a = s.atk || 0, ph = a > 0 ? 1 - a / AT : 0, c = s.cast || 0, cp = c > 0 ? 1 - c / CT : 0;
     const ease = t => t * t * (3 - 2 * t), seg = (t, a0, a1) => Math.max(0, Math.min(1, (t - a0) / (a1 - a0)));
@@ -496,16 +494,16 @@
   function drawHud(){
     btns = [];
     // top bar
-    ctx.fillStyle = 'rgba(10,8,24,.8)'; rr(10, 12, LW - 20, 64, 14); ctx.fill();
-    ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic'; ctx.fillStyle = '#ffd447'; ctx.font = '900 20px sans-serif'; ctx.fillText(G.kind === 'hunt' ? `🏹 사냥 ${Math.max(0, Math.ceil(HUNT_T - G.t))}초` : G.kind === 'raid' ? `👹 레이드 ${G.wave}단계` : `${G.wave} 웨이브${G.mode ? ' · ' + MODES[G.mode].n : ''}`, 24, 40);
-    ctx.fillStyle = '#c8c0ea'; ctx.font = '700 12px sans-serif'; ctx.fillText(G.kind === 'hunt' ? `처치 ${G.kills}마리` : G.kind === 'raid' ? `보스 처치 ${G.bosses || 0} · ${G.wave ? '제한 ' + Math.ceil(G.waveT) + '초' : Math.ceil(G.waveT) + '초 뒤 시작'}` : G.wave ? `다음 웨이브 ${Math.ceil(G.waveT)}초` : `${Math.ceil(G.waveT)}초 뒤 시작`, 24, 60);
+    ctx.fillStyle = 'rgba(10,8,24,.8)'; rr(10, 6, LW - 20, 48, 12); ctx.fill();
+    ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic'; ctx.fillStyle = '#ffd447'; ctx.font = '900 17px sans-serif'; ctx.fillText(G.kind === 'hunt' ? `🏹 사냥 ${Math.max(0, Math.ceil(HUNT_T - G.t))}초` : G.kind === 'raid' ? `👹 레이드 ${G.wave}단계` : `${G.wave} 웨이브${G.mode ? ' · ' + MODES[G.mode].n : ''}`, 22, 27);
+    ctx.fillStyle = '#c8c0ea'; ctx.font = '700 11px sans-serif'; ctx.fillText(G.kind === 'hunt' ? `처치 ${G.kills}마리` : G.kind === 'raid' ? `보스 처치 ${G.bosses || 0} · ${G.wave ? '제한 ' + Math.ceil(G.waveT) + '초' : Math.ceil(G.waveT) + '초 뒤 시작'}` : G.wave ? `다음 웨이브 ${Math.ceil(G.waveT)}초` : `${Math.ceil(G.waveT)}초 뒤 시작`, 22, 45);
     const n = G.mobs.length, frac = Math.min(1, n / CAP);
-    ctx.textAlign = 'right'; ctx.fillStyle = frac > 0.8 ? '#ff6a6a' : '#fff'; ctx.font = '900 18px sans-serif'; ctx.fillText(`👾 ${n}/${CAP}`, LW - 24, 40);
-    ctx.fillStyle = '#000a'; rr(LW - 134, 50, 110, 8, 4); ctx.fill(); ctx.fillStyle = frac > 0.8 ? '#ff4a4a' : frac > 0.5 ? '#ffb347' : '#6ee07a'; rr(LW - 134, 50, 110 * frac, 8, 4); ctx.fill();
-    if (G.bossAlive){ const b = G.bossAlive; ctx.fillStyle = 'rgba(10,8,24,.8)'; rr(40, 84, LW - 80, 22, 11); ctx.fill(); ctx.fillStyle = '#ff5a5a'; rr(44, 88, (LW - 88) * Math.max(0, b.hp / b.max), 14, 7); ctx.fill();
-      ctx.textAlign = 'center'; ctx.fillStyle = '#fff'; ctx.font = '800 11px sans-serif'; ctx.fillText(`보스 · 남은 시간 ${Math.ceil(G.waveT)}초`, LW / 2, 99); }
+    ctx.textAlign = 'right'; ctx.fillStyle = frac > 0.8 ? '#ff6a6a' : '#fff'; ctx.font = '900 16px sans-serif'; ctx.fillText(`👾 ${n}/${CAP}`, LW - 22, 27);
+    ctx.fillStyle = '#000a'; rr(LW - 132, 36, 110, 7, 3.5); ctx.fill(); ctx.fillStyle = frac > 0.8 ? '#ff4a4a' : frac > 0.5 ? '#ffb347' : '#6ee07a'; rr(LW - 132, 36, 110 * frac, 7, 3.5); ctx.fill();
+    if (G.bossAlive){ const b = G.bossAlive; ctx.fillStyle = 'rgba(10,8,24,.8)'; rr(40, 262, LW - 80, 18, 9); ctx.fill(); ctx.fillStyle = '#ff5a5a'; rr(43, 265, (LW - 86) * Math.max(0, b.hp / b.max), 12, 6); ctx.fill();
+      ctx.textAlign = 'center'; ctx.fillStyle = '#fff'; ctx.font = '800 11px sans-serif'; ctx.fillText(`내 보스 · 남은 시간 ${Math.ceil(G.waveT)}초`, LW / 2, 275); }
     // bottom panel
-    const by = 520; ctx.fillStyle = 'rgba(10,8,24,.85)'; rr(10, by, LW - 20, 108, 16); ctx.fill();
+    const by = 504; ctx.fillStyle = 'rgba(10,8,24,.85)'; rr(10, by, LW - 20, 108, 16); ctx.fill();
     ctx.textAlign = 'left'; ctx.fillStyle = '#e8e8f0'; ctx.font = '900 18px sans-serif'; ctx.fillText(`🪙 ${Math.floor(G.silver)}`, 26, by + 30);
     ctx.fillStyle = '#8cf08c'; ctx.font = '900 15px sans-serif'; ctx.fillText(`🍀 ${G.luck}`, 120, by + 30);
     GAMBLE.forEach((g, k) => { const ok = G.luck >= g.cost; btn(26 + k * 60, by + 40, 54, 32, ok ? [RAR[g.r].c, RAR[g.r].g] : ['#3a3450', '#2a2440'], () => gamble(k), [RAR[g.r].n, `${Math.round(g.p * 100)}% 🍀${g.cost}`], ok ? '#111' : '#777', 12, 9); });
@@ -515,13 +513,13 @@
     ctx.fillStyle = G.drag ? 'rgba(255,80,80,.35)' : 'rgba(255,255,255,.06)'; rr(26, by + 78, 110, 24, 8); ctx.fill(); ctx.fillStyle = '#ffb0b0'; ctx.font = '800 12px sans-serif'; ctx.textAlign = 'center'; ctx.fillText('🗑️ 판매', 81, by + 95);
     btn(142, by + 78, 44, 24, ['#2a2446', '#2a2446'], () => { G.speed = G.speed === 1 ? 2 : 1; }, [`▶x${G.speed}`, ''], '#ffd447', 12, 0);
     const AB = [ ['⬆️ 강화', 'up', '#3a6ad8'], ['🎯 미션', 'mis', '#d86a3a'], ['📖 신화', 'myth', '#c03a8a'] ];
-    AB.forEach(([t, k, c], j) => { const x = 18 + j * 78; btn(x, 482, 72, 30, [c, '#1a1630'], () => { G.panel = G.panel === k ? null : k; G.sel = -1; }, [t, ''], '#fff', 12, 0);
-      if (k === 'mis' && G.mis.some(v => v <= 0) && G.wave >= 1){ ctx.fillStyle = '#ff4a5a'; ctx.beginPath(); ctx.arc(x + 68, 486, 4, 0, 6.28); ctx.fill(); } });
-    btn(LW - 66, 482, 48, 30, ['#2a2446', '#1a1630'], () => goHomeConfirm(), ['🏠', ''], '#fff', 14, 0);
-    const rc = recipeReady(); if (rc){ const pulse = 0.5 + 0.5 * Math.sin(G.t * 6); btn(LW / 2 - 80, 434, 160, 40, ['#ff9ab0', '#e0405e'], makeMyth, ['✨ 신화 조합 ✨', UB(rc.out).name], '#fff', 15, 11); ctx.strokeStyle = `rgba(255,255,255,${pulse})`; ctx.lineWidth = 2; rr(LW / 2 - 80, 434, 160, 40, 14); ctx.stroke(); }
+    AB.forEach(([t, k, c], j) => { const x = 18 + j * 78; const rdy = k === 'myth' && recipeReady(); btn(x, 470, 72, 28, rdy ? ['#ff9ab0', '#e0405e'] : [c, '#1a1630'], rdy ? makeMyth : () => { G.panel = G.panel === k ? null : k; G.sel = -1; }, [rdy ? '✨ 조합!' : t, ''], '#fff', 12, 0);
+      if (rdy){ ctx.strokeStyle = `rgba(255,255,255,${0.5 + 0.5 * Math.sin(G.t * 6)})`; ctx.lineWidth = 2; rr(x, 470, 72, 28, 11); ctx.stroke(); }
+      if (k === 'mis' && G.mis.some(v => v <= 0) && G.wave >= 1){ ctx.fillStyle = '#ff4a5a'; ctx.beginPath(); ctx.arc(x + 68, 474, 4, 0, 6.28); ctx.fill(); } });
+    btn(LW - 66, 470, 48, 28, ['#2a2446', '#1a1630'], () => goHomeConfirm(), ['🏠', ''], '#fff', 14, 0);
     drawSel(); drawPanel();
     if (G.flash > 0){ ctx.fillStyle = `rgba(${G.flashC},${G.flash * 0.5})`; ctx.fillRect(0, 0, LW, LH); }
-    if (bannerS){ const a = Math.min(1, bannerS.t * 2); ctx.globalAlpha = a; ctx.font = '900 30px sans-serif'; ctx.textAlign = 'center'; ctx.lineWidth = 6; ctx.strokeStyle = '#000'; ctx.strokeText(bannerS.s, LW / 2, 200); ctx.fillStyle = bannerS.c; ctx.fillText(bannerS.s, LW / 2, 200); ctx.globalAlpha = 1; }
+    if (bannerS){ const a = Math.min(1, bannerS.t * 2); ctx.globalAlpha = a; ctx.font = '900 30px sans-serif'; ctx.textAlign = 'center'; ctx.lineWidth = 6; ctx.strokeStyle = '#000'; ctx.strokeText(bannerS.s, LW / 2, 252); ctx.fillStyle = bannerS.c; ctx.fillText(bannerS.s, LW / 2, 252); ctx.globalAlpha = 1; }
   }
   function card(x, y, w, h, title){ btns.push({ x: 0, y: 0, w: LW, h: LH, fn: () => { G.panel = null; } }); btns.push({ x, y, w, h, fn: () => {} });
     ctx.fillStyle = 'rgba(0,0,0,.45)'; ctx.fillRect(0, 0, LW, LH); ctx.fillStyle = 'rgba(24,20,44,.97)'; rr(x, y, w, h, 16); ctx.fill(); ctx.strokeStyle = '#4a3f7a'; ctx.lineWidth = 2; ctx.stroke();
@@ -568,7 +566,7 @@
     const i = cellAt(x, y); if (i >= 0 && G.grid[i]){ G.drag = { i, x, y, sx: x, sy: y, moved: false }; cv.setPointerCapture(e.pointerId); } else G.sel = -1; });
   cv.addEventListener('pointermove', e => { if (G && G.drag){ const [x, y] = pt(e); G.drag.x = x; G.drag.y = y; if (Math.hypot(x - G.drag.sx, y - G.drag.sy) > 8) G.drag.moved = true; } });
   cv.addEventListener('pointerup', e => { if (!G || !G.drag) return; const [x, y] = pt(e), d = G.drag; G.drag = null; if (!d.moved){ G.sel = G.sel === d.i ? -1 : d.i; return; } G.sel = -1;
-    if (y > 590 && x < 140){ sell(d.i); return; }
+    if (y > 572 && x < 140){ sell(d.i); return; }
     const j = cellAt(x, y); if (j < 0 || j === d.i) return;
     if (!merge(d.i, j)){ const t = G.grid[j]; G.grid[j] = G.grid[d.i]; G.grid[d.i] = t; } });
 
