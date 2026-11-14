@@ -47,9 +47,9 @@
   .sbtn{box-shadow:0 3px 0 rgba(0,0,0,.35);text-shadow:0 1px 0 rgba(255,255,255,.3)}
   .sub{font-size:13px;color:#e8e0ff;text-align:center;text-shadow:0 1px 3px #000}
   .heroWrap{position:relative;flex:1;width:100%;display:flex;align-items:flex-end;justify-content:center;min-height:180px}
-  .heroWrap img{height:min(36vh,260px);filter:drop-shadow(0 10px 14px rgba(0,0,0,.5));animation:breathe 2.6s ease-in-out infinite;transform-origin:50% 100%}
+  .heroWrap img{height:min(27vh,200px);filter:drop-shadow(0 10px 14px rgba(0,0,0,.5));animation:breathe 2.6s ease-in-out infinite;transform-origin:50% 100%}
   .heroWrap .glow{position:absolute;bottom:0;width:200px;height:46px;border-radius:50%;background:radial-gradient(rgba(255,120,160,.75),transparent 70%);animation:pulse 2s infinite}
-  .side{position:absolute;bottom:10px;height:min(20vh,150px)!important;opacity:.95}
+  .side{position:absolute;bottom:10px;height:min(16vh,120px)!important;opacity:.95}
   @keyframes breathe{0%,100%{transform:scale(1,1)}50%{transform:scale(1.02,.98)}}
   @keyframes pulse{0%,100%{opacity:.6}50%{opacity:1}}
   .bigbtn{border:0;border-radius:20px;padding:16px 0;width:84%;font-size:24px;font-weight:900;background:linear-gradient(#ffe27a,#ffb21e);color:#3a2206;box-shadow:0 6px 0 #a8641e,0 0 24px rgba(255,200,60,.5);margin-top:14px;animation:pulse 1.6s infinite}
@@ -88,6 +88,49 @@
   .tc{background:rgba(255,255,255,.05);border-radius:12px;padding:10px;text-align:center;border:1.5px solid rgba(255,212,71,.25)}
   .tc .e{font-size:30px}.tc .n{font-weight:900;font-size:13px;color:#ffd447}.tc .d{font-size:11px;color:#c8c0ea;margin-top:2px}
   .tc.lock{opacity:.4;filter:grayscale(1)}
+  #gacha{position:absolute;inset:0;z-index:15;display:none;flex-direction:column;align-items:center;justify-content:center;background:radial-gradient(circle at 50% 45%,#3a2a7a,#07050f 75%)}
+  #gacha.on{display:flex}
+  #gacha .chest{font-size:110px;filter:drop-shadow(0 0 30px rgba(255,210,90,.7));animation:shake .5s infinite}
+  #gacha .chest.open{animation:pop .35s forwards}
+  #gacha .tap{color:#ffd447;font-weight:900;margin-top:10px;animation:pulse 1s infinite}
+  @keyframes shake{0%,100%{transform:rotate(-6deg) scale(1)}50%{transform:rotate(6deg) scale(1.06)}}
+  @keyframes pop{to{transform:scale(1.8);opacity:0}}
+  #gacha .gcards{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;width:92%;max-width:420px}
+  #gacha .gcards.one{grid-template-columns:1fr;width:44%}
+  .gc{aspect-ratio:3/4;perspective:600px}
+  .gc .in{position:relative;width:100%;height:100%;transition:transform .45s;transform-style:preserve-3d}
+  .gc.flip .in{transform:rotateY(180deg)}
+  .gc .f,.gc .b{position:absolute;inset:0;border-radius:10px;backface-visibility:hidden;display:flex;flex-direction:column;align-items:center;justify-content:center}
+  .gc .b{background:linear-gradient(135deg,#4a3a8a,#24184a);border:2px solid #c9a24a;font-size:26px;color:#ffd447;font-weight:900}
+  .gc .f{transform:rotateY(180deg);border:2.5px solid;overflow:hidden}
+  .gc .f img{height:62%;filter:drop-shadow(0 2px 3px rgba(0,0,0,.5))}
+  .gc .f .e{font-size:30px}
+  .gc .f b{font-size:10px;margin-top:3px;text-align:center;line-height:1.15;padding:0 2px}
+  .gc .f i{font-style:normal;font-size:9px;opacity:.85}
+  .gc.hi .f{animation:glowc 1s infinite}
+  @keyframes glowc{50%{box-shadow:0 0 18px currentColor}}
+  #gacha .gbtn{margin-top:18px;border:0;border-radius:14px;padding:12px 40px;font-size:16px;font-weight:900;background:linear-gradient(#ffe27a,#ffb21e);color:#3a2206;box-shadow:0 4px 0 #a8641e;display:none}
+  .gpanel{background:linear-gradient(160deg,#3a2a7a,#1a1236);border:2px solid #c9a24a;border-radius:18px;padding:14px;text-align:center;margin-bottom:10px;position:relative;overflow:hidden}
+  .gpanel .big{font-size:64px;line-height:1;margin:6px 0;filter:drop-shadow(0 0 16px rgba(255,210,90,.6))}
+  .gpanel .odds{display:flex;gap:4px;justify-content:center;flex-wrap:wrap;margin:6px 0 10px}
+  .gpanel .odds span{font-size:10px;font-weight:900;border-radius:8px;padding:2px 6px;background:rgba(0,0,0,.4)}
+  .gbtns{display:flex;gap:8px}.gbtns button{flex:1;border:0;border-radius:12px;padding:10px 0;font-weight:900;font-size:14px;background:linear-gradient(#ffe27a,#ffb21e);color:#3a2206;box-shadow:0 3px 0 #a8641e}
+  .gbtns button.alt{background:linear-gradient(#c9a8ff,#7a4ad8);color:#fff;box-shadow:0 3px 0 #4a2a8a}
+  .gbtns button:disabled{background:#3a3456;color:#777;box-shadow:none}
+  .uc .cbar{height:5px;background:#0008;border-radius:3px;margin:3px 6px 0;overflow:hidden}.uc .cbar i{display:block;height:100%;background:#6ee0ff}
+  .uc .cn{font-size:9px;color:#9fe8ff;font-weight:800}
+  .tc .gr{font-size:9px;font-weight:900;border-radius:6px;padding:1px 6px;display:inline-block;margin-bottom:2px}
+  .tabs button{font-size:10px}
+  .chests{display:flex;gap:6px;width:92%;margin-top:8px}
+  .chs{flex:1;aspect-ratio:1/1.05;border-radius:12px;background:rgba(10,8,24,.78);border:2px solid rgba(255,255,255,.12);display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;font-weight:900;font-size:10px;color:#c8c0ea;box-shadow:0 3px 0 rgba(0,0,0,.35)}
+  .chs .ce{font-size:28px;line-height:1.1}
+  .chs.ready{animation:pulse 1s infinite;border-color:#8cf08c;color:#8cf08c}
+  .chs.run{border-color:#ffd447;color:#ffd447}
+  .chs.empty{opacity:.45}
+  #sheet{position:absolute;left:0;right:0;bottom:0;z-index:14;background:linear-gradient(#2e2656,#161230);border-top:2px solid #c9a24a;border-radius:18px 18px 0 0;padding:16px 16px calc(16px + env(safe-area-inset-bottom));transform:translateY(105%);transition:transform .25s}
+  #sheet.on{transform:none}
+  #sheet h3{margin:0 0 4px;color:#ffd447}
+  #sheet .sbtn{width:100%;margin-top:8px;padding:11px 0;font-size:14px}
   #exitBtn{position:absolute;left:10px;bottom:10px;display:none}
 </style></head><body><div id="wrap">
 <canvas id="c"></canvas>
@@ -98,23 +141,30 @@
     <div class="heroWrap"><div class="glow"></div><img class="side" id="hSideL" style="left:6%" alt=""><img id="hHero" alt=""><img class="side" id="hSideR" style="right:6%" alt=""></div>
     <div class="modes" id="modes"></div>
     <div class="modes" id="xmodes"></div>
+    <div class="chests" id="chests"></div>
     <button class="bigbtn" id="go">⚔️ 전투 시작<small id="hTip">몬스터 100마리가 넘으면 패배!</small></button>
   </div>
-  <div class="hpage" id="pgUnits"><div class="card"><h3>수호자 강화</h3><div class="sub" style="text-align:left;margin-bottom:8px">골드로 영구 강화 · 레벨당 공격력 +12%</div><div class="ugrid" id="uGrid"></div></div>
+  <div class="hpage" id="pgUnits"><div class="card"><h3>수호자 강화</h3><div class="sub" style="text-align:left;margin-bottom:8px">소환에서 얻은 카드 + 골드로 레벨업 · 레벨당 공격력 +12%</div><div class="ugrid" id="uGrid"></div></div>
     <div class="card"><h3>✨ 신화 조합식</h3><div id="recList"></div></div></div>
   <div class="hpage" id="pgShop"><div class="card" style="border-color:#ffd447"><h3>👑 프리미엄</h3><div id="shopPrem"></div></div><div class="card"><h3>💎 보석 상점</h3><div id="shopPay"></div></div><div class="card"><h3>무료 보급</h3><div id="shopFree"></div></div><div class="card"><h3>보석 교환</h3><div id="shopGem"></div></div></div>
-  <div class="hpage" id="pgTreas"><div class="card"><h3>💠 보물 뽑기</h3><div class="sub" style="text-align:left">보물은 모든 전투에 효과가 적용돼요. 같은 보물이 또 나오면 레벨업! (최대 Lv.10)</div>
-    <button class="bigbtn" id="bTr" style="width:100%;font-size:18px;animation:none">💎 30 · 보물 1회 뽑기</button><button class="btn2" id="bTr10">💎 270 · 10회 뽑기 (10% 할인)</button><div class="sub" id="trOdds" style="text-align:left;margin-top:8px;font-size:11px"></div></div>
-    <div class="card"><h3>내 보물</h3><div class="tgrid" id="trGrid"></div></div></div>
+  <div class="hpage" id="pgSummon"><div class="gpanel"><h3 style="margin:0;color:#ffd447">🎴 수호자 소환</h3><div class="big">🎁</div><div class="sub">수호자 카드를 모아 레벨업! 10회 소환은 영웅 이상 1장 확정</div><div class="odds" id="uOdds"></div>
+      <div class="gbtns"><button id="bU1">💎 50<br><small>1회</small></button><button id="bU10" class="alt">💎 450<br><small>10회</small></button></div><button class="btn2" id="bUfree" style="font-size:13px;padding:9px 0">🎁 오늘의 무료 소환</button><button class="btn2" id="bUad" style="font-size:13px;padding:9px 0;margin-top:6px">📺 광고 보고 소환</button></div>
+    <div class="gpanel" style="background:linear-gradient(160deg,#1e4a2a,#0c1a10)"><h3 style="margin:0;color:#8cf08c">⏰ 무료 보급 상자</h3><div class="big">📦</div><div class="sub" id="fcTxt"></div><div class="gbtns" style="margin-top:8px"><button id="bFC">열기</button></div></div>
+    <div class="gpanel" style="background:linear-gradient(160deg,#5a3a14,#1e1206)"><h3 style="margin:0;color:#ffd447">🏺 유물 상자</h3><div class="big">🏺</div><div class="sub">유물은 모든 전투에 효과 적용 · 같은 유물이 나오면 레벨업 (최대 Lv.10)</div><div class="odds" id="rOdds"></div>
+      <div class="gbtns"><button id="bR1">💎 40<br><small>1회</small></button><button id="bR10" class="alt">💎 360<br><small>10회</small></button></div><div class="sub" style="margin-top:8px;font-size:11px"><a href="prob.html" target="_blank" style="color:#c8c0ea">확률 정보 자세히 보기</a></div></div></div>
+  <div class="hpage" id="pgTreas"><div class="card"><h3>🏺 내 유물</h3><div class="sub" style="text-align:left;margin-bottom:8px" id="relSum"></div><div class="tgrid" id="trGrid"></div></div></div>
   <div class="hpage" id="pgQuest"><div class="card"><h3>📅 출석</h3><div id="attList"></div></div><div class="card"><h3>오늘의 퀘스트</h3><div id="qList"></div></div></div>
-  <div class="tabs"><button data-p="pgShop"><b>🛒</b>상점<i class="dot" id="dShop"></i></button><button data-p="pgUnits"><b>🧙</b>수호자<i class="dot" id="dUnits"></i></button><button data-p="pgBattle" class="on"><b>⚔️</b>전투</button><button data-p="pgTreas"><b>💠</b>보물<i class="dot" id="dTreas"></i></button><button data-p="pgQuest"><b>📜</b>퀘스트<i class="dot" id="dQuest"></i></button></div>
+  <div class="tabs"><button data-p="pgShop"><b>🛒</b>상점<i class="dot" id="dShop"></i></button><button data-p="pgUnits"><b>🧙</b>수호자<i class="dot" id="dUnits"></i></button><button data-p="pgBattle" class="on"><b>⚔️</b>전투</button><button data-p="pgSummon"><b>🎴</b>소환<i class="dot" id="dSum"></i></button><button data-p="pgTreas"><b>🏺</b>유물<i class="dot" id="dTreas"></i></button><button data-p="pgQuest"><b>📜</b>퀘스트<i class="dot" id="dQuest"></i></button></div>
 </div>
 <div id="toast"></div>
+<div id="sheet"></div>
+<div id="gacha"><div class="chest" id="gChest">🎁</div><div class="tap" id="gTap">터치해서 열기!</div><div class="gcards" id="gCards"></div><button class="gbtn" id="gOk">확인</button></div>
 <div id="load"><div class="ttl">운빨 수호대<small>RANDOM DEFENSE</small></div><div class="bar"><i id="loadBar"></i></div><div class="tip" id="loadTip">수호자들을 깨우는 중...</div></div>
 <div id="over" class="ov hide"><div class="box">
   <h1 id="ovT">패배...</h1>
   <p id="ovS"></p>
   <div class="reward" id="ovR"></div>
+  <button class="btn" id="adDouble" style="background:linear-gradient(#6ee0ff,#2a8ad8);color:#fff;display:none">📺 광고 보고 보상 2배</button>
   <button class="btn" id="again">다시 하기</button>
   <button class="btn2" id="toHome">🏠 홈으로</button>
 </div></div>
@@ -175,6 +225,12 @@
     { id:'arch5',  r:4, name:'대마법사',    e:'☄️', kind:'chain', dmg:900,spd:1.1, rng:220, n:6, slow:0.3 },
   ];
   const byRar = r => UNITS.filter(u => u.r === r);
+  const ABIL = { sword1: ['연속 베기', '15% 확률로 2번 공격'], bow1: ['급소 노리기', '치명타 확률 +10%'], mage1: ['마력 폭발', '폭발 범위 +40%'],
+    sword2: ['방패 강타', '8% 확률로 0.6초 기절'], bow2: ['거물 사냥', '보스·미션 보스 피해 +50%'], ice2: ['빙결', '둔화 + 10% 확률로 1초 얼림'],
+    sword3: ['수호의 오라', '붙어 있는 아군 공격 속도 +15%'], bow3: ['저격', '체력 높은 적 우선 · 치명타 +20%'], fire3: ['화상', '3초 동안 매초 공격력 30% 피해'],
+    sword4: ['회오리 베기', '4번째 공격마다 주변에 3배 피해'], bow4: ['질풍', '맞은 적을 뒤로 밀쳐냄'], bolt4: ['감전', '12% 확률로 0.8초 기절'],
+    drag5: ['용의 숨결', '5초마다 넓은 범위에 6배 화염'], star5: ['별의 비', '6초마다 모든 적에게 2.5배'], arch5: ['메테오', '8초마다 10배 운석 + 기절'] };
+  UNITS.find(u => u.id === 'mage1').aoe = 36;
   // ---------- meta (save) ----------
   const SKEY = 'luckdef_v1', today = () => new Date().toISOString().slice(0, 10);
   let M = { gold: 300, gem: 30, best: 0, lv: {}, seen: {}, day: '', q: {}, qc: {}, att: 0, attDay: '', free: '', games: 0 };
@@ -189,15 +245,26 @@
   const MODES = [ { n: '일반', hp: 1, rw: 1, c: '#6ee07a' }, { n: '하드', hp: 2.4, rw: 1.8, c: '#ffb347' }, { n: '지옥', hp: 6, rw: 3, c: '#ff4a6a' } ];
   M.mode = M.mode || 0; M.bm = M.bm || [M.best || 0, 0, 0]; M.tr = M.tr || {};
   const modeOpen = k => k === 0 || (M.bm[k - 1] || 0) >= 20;
+  const RGR = [ { n: '일반', c: '#c8d0e0', p: 0.50 }, { n: '희귀', c: '#5ab0ff', p: 0.33 }, { n: '영웅', c: '#b98cff', p: 0.14 }, { n: '전설', c: '#ffd447', p: 0.03 } ];
   const TREAS = [
-    { id: 'purse', n: '황금 주머니', e: '💰', d: lv => `시작 은화 +${lv * 25}` },
-    { id: 'clover', n: '행운의 클로버', e: '🍀', d: lv => `시작 행운석 +${lv ? Math.floor(lv / 2) + 1 : 0}` },
-    { id: 'whet', n: '날카로운 숫돌', e: '🗡️', d: lv => `치명타 확률 +${lv * 2}%` },
-    { id: 'giant', n: '거인 사냥꾼', e: '🪓', d: lv => `보스 피해 +${lv * 15}%` },
-    { id: 'scroll', n: '마법 두루마리', e: '📜', d: lv => `모든 공격력 +${lv * 5}%` },
-    { id: 'bell', n: '소환의 종', e: '🔔', d: lv => `소환 비용 -${lv}` },
+    { id: 'purse', g: 0, n: '황금 주머니', e: '💰', d: lv => `시작 은화 +${lv * 25}` },
+    { id: 'bell', g: 0, n: '소환의 종', e: '🔔', d: lv => `소환 비용 -${lv}` },
+    { id: 'clover', g: 0, n: '행운의 클로버', e: '🍀', d: lv => `시작 행운석 +${lv ? Math.floor(lv / 2) + 1 : 0}` },
+    { id: 'whet', g: 1, n: '날카로운 숫돌', e: '🗡️', d: lv => `치명타 확률 +${lv * 2}%` },
+    { id: 'scroll', g: 1, n: '마법 두루마리', e: '📜', d: lv => `모든 공격력 +${lv * 5}%` },
+    { id: 'giant', g: 1, n: '거인 사냥꾼', e: '🪓', d: lv => `보스 피해 +${lv * 15}%` },
+    { id: 'frost', g: 2, n: '서리 결정', e: '❄️', d: lv => `둔화 지속 +${lv * 10}%` },
+    { id: 'feather', g: 2, n: '바람의 깃털', e: '🪶', d: lv => `공격 속도 +${lv * 3}%` },
+    { id: 'cauldron', g: 2, n: '연금술 솥', e: '⚗️', d: lv => `판매 은화 +${lv * 10}%` },
+    { id: 'dice', g: 3, n: '운명의 주사위', e: '🎲', d: lv => `도박 성공 확률 +${lv}%p` },
+    { id: 'heart', g: 3, n: '용의 심장', e: '❤️‍🔥', d: lv => `신화 스킬 대기 -${lv * 4}%` },
+    { id: 'glass', g: 3, n: '시간의 모래시계', e: '⏳', d: lv => `웨이브마다 은화 +${lv * 6}` },
   ];
-  const TL = id => M.tr[id] || 0, TR_MAX = 10, TR_COST = 30;
+  const TL = id => M.tr[id] || 0, TR_MAX = 10;
+  M.cards = M.cards || {};
+  const UODDS = [0.55, 0.30, 0.11, 0.035, 0.005];
+  const cardNeed = lv => [2, 4, 6, 10, 15, 22, 30, 40, 55, 70, 90, 110, 140, 170, 200][Math.min(14, lv)] * 1;
+  const lvGold = u => Math.floor([40, 120, 360, 900, 2400][u.r] * Math.pow(1.35, M.lv[u.id] || 0));
    // 1,2,4,6 = gold; 3,5,7 = gems
 
   const UB = id => UNITS.find(u => u.id === id);
@@ -268,7 +335,7 @@
   const WAVE_N = w => 18 + Math.floor(w * 1.2);
 
   function startWave(){
-    G.wave++; G.waveT = G.wave % 10 === 0 ? 45 : 20; if (G.wave > 1) G.luck += 1;
+    G.wave++; G.waveT = G.wave % 10 === 0 ? 45 : 20; if (G.wave > 1){ G.luck += 1; G.silver += TL('glass') * 6; }
     if (G.kind === 'raid'){ G.waveT = 30; const b = BOSSES[(G.wave - 1) % BOSSES.length], hp = mobHp(6 + G.wave * 4) * 30; SFX.boss();
       if ((G.bossAlive && G.bossAlive.hp > 0) || (G.bossP && G.bossP.hp > 0)){ gameOver(); return; }
       const m = { f: 0, d: 0, hp, max: hp, spd: 20, boss: true, type: b, slowT: 0, hit: 0, id: Math.random() }, m2 = { ...m, f: 1, id: Math.random() }; G.mobs.push(m, m2); G.bossAlive = m; G.bossP = m2; banner(`레이드 ${G.wave}단계`, '#ff5a5a'); return; }
@@ -301,7 +368,7 @@
     G.grid[a] = null; place(b, pick(byRar(A.u.r + 1))); SFX.merge();
     return true;
   }
-  function sell(i){ const s = G.grid[i]; if (!s) return; G.silver += [10, 30, 90, 270, 800][s.u.r]; G.grid[i] = null; }
+  function sell(i){ const s = G.grid[i]; if (!s) return; G.silver += Math.floor([10, 30, 90, 270, 800][s.u.r] * (1 + TL('cauldron') * 0.1)); G.grid[i] = null; }
 
   // ---------- combat ----------
   const mobXY = m => pathPos(m.d, m.f || 0);
@@ -314,11 +381,11 @@
     (r >= 4 ? SFX.myth : r >= 2 ? SFX.epic : r === 1 ? SFX.rare : SFX.summon)(); }
   const GAMBLE = [ { r: 1, p: 0.6, cost: 1 }, { r: 2, p: 0.2, cost: 1 }, { r: 3, p: 0.1, cost: 2 } ];
   function gamble(k){ const g = GAMBLE[k]; if (G.over || G.luck < g.cost) return; const free = G.grid.map((u, i) => u ? -1 : i).filter(i => i >= 0); if (!free.length){ float('칸이 가득 찼어요', LW/2, GY - 40, '#ff9a9a'); return; }
-    G.luck -= g.cost; if (Math.random() < g.p) place(pick(free), pick(byRar(g.r)), [53 + k * 60, 560]); else { float('꽝...', LW / 2, 470, '#9a92c0'); SFX.fail(); } }
+    G.luck -= g.cost; if (Math.random() < g.p + TL('dice') * 0.01) place(pick(free), pick(byRar(g.r)), [53 + k * 60, 560]); else { float('꽝...', LW / 2, 470, '#9a92c0'); SFX.fail(); } }
   function recipeReady(){ return RECIPES.find(rc => rc.need.every(id => G.grid.some(s => s && s.u.id === id))); }
   function makeMyth(){ const rc = recipeReady(); if (!rc) return; let spot = -1; rc.need.forEach(id => { const i = G.grid.findIndex(s => s && s.u.id === id); if (spot < 0) spot = i; G.grid[i] = null; }); place(spot, UB(rc.out)); }
   const fmt = n => n >= 1e9 ? (n / 1e9).toFixed(1) + 'B' : n >= 1e6 ? (n / 1e6).toFixed(1) + 'M' : n >= 1e4 ? (n / 1e3).toFixed(1) + 'K' : Math.floor(n) + '';
-  function damage(m, dmg){ if (m.hp <= 0) return; const crit = Math.random() < 0.12 + TL('whet') * 0.02; if (crit) dmg *= 2.5; if (m.boss || m.mbo) dmg *= 1 + TL('giant') * 0.15; m.hp -= dmg; m.hit = 0.12; SFX.hit(); m.kb = crit ? 1 : 0.6; if (crit && dmg > 400) G.shake = Math.max(G.shake, 2.5);
+  function damage(m, dmg, cb = 0){ if (m.hp <= 0) return; const crit = Math.random() < 0.12 + TL('whet') * 0.02 + cb; if (crit) dmg *= 2.5; if (m.boss || m.mbo) dmg *= 1 + TL('giant') * 0.15; m.hp -= dmg; m.hit = 0.12; SFX.hit(); m.kb = crit ? 1 : 0.6; if (crit && dmg > 400) G.shake = Math.max(G.shake, 2.5);
     if (crit || m.boss || Math.random() < 0.2){ const [x, y] = mobXY(m); G.texts.push({ s: fmt(dmg) + (crit ? '!' : ''), x: x + (Math.random() - .5) * 14, y: y - (m.boss ? 50 : 30), t: 0.7, c: crit ? '#ffd447' : '#fff', big: crit }); }
     if (m.hp <= 0) kill(m); }
   function kill(m){ G.kills++; if (m.mbo && m.life > 0){ MISS[m.mission].fn(); banner('미션 성공! ' + MISS[m.mission].rw, '#6ee07a'); SFX.myth(); } const [x, y] = mobXY(m), gain = m.boss ? 100 + G.wave * 5 : m.mbo ? 20 : 4 + Math.floor(G.wave / 5); if (m.f === 1) G.pt.silver += gain; else { G.silver += gain; SFX.coin(); }
@@ -332,18 +399,20 @@
     if (s.pend && s.atk <= AT * 0.5){ const f = s.pend; s.pend = null; f(); }
     if (s.cpend && s.cast <= CT * 0.45){ const f = s.cpend; s.cpend = null; f(); }
     if (s.cd <= 0 && !s.cast && !s.pend){ const list = front(inRange(x, y, s.u.rng + bonus, f)); if (list.length){ const [tx, ty] = mobXY(list[0]);
-      s.face = tx > x + 4 ? -1 : 1; s.ang = Math.atan2(ty - 10 - (y - 14), tx - x); s.atk = AT; s.pend = () => attack(s, x, y, bonus, mul, f); s.cd = Math.max(AT + 0.05, 1 / s.u.spd); } }
-    const SK = SKILL[s.u.id]; if (SK){ s.sk = (s.sk || 0) + dt; if (s.sk >= SK.cd && G.mobs.some(m => (m.f || 0) === f) && !s.cast){ s.sk = 0; s.cast = CT; s.atk = 0; s.pend = null; float(SK.n + '!', x, y - 40, '#ff8aa8'); SFX.rare(); s.cpend = () => castSkill(s, x, y, mul, f); } } }
+      s.face = tx > x + 4 ? -1 : 1; s.ang = Math.atan2(ty - 10 - (y - 14), tx - x); s.atk = AT; s.pend = () => attack(s, x, y, bonus, mul, f); s.cd = Math.max(AT + 0.05, 1 / (s.u.spd * (1 + TL('feather') * 0.03) * (s.aura ? 1.15 : 1))); } }
+    const SK = SKILL[s.u.id]; if (SK){ s.sk = (s.sk || 0) + dt; if (s.sk >= SK.cd * (1 - TL('heart') * 0.04) && G.mobs.some(m => (m.f || 0) === f) && !s.cast){ s.sk = 0; s.cast = CT; s.atk = 0; s.pend = null; float(SK.n + '!', x, y - 40, '#ff8aa8'); SFX.rare(); s.cpend = () => castSkill(s, x, y, mul, f); } } }
     function attack(s, x, y, bonus = 0, mul = 1, f = 0){
-    const U = s.u, list = front(inRange(x, y, U.rng + bonus, f)); if (!list.length) return false;
+    const U = s.u, list = U.id === 'bow3' ? inRange(x, y, U.rng + bonus, f).sort((a, b) => b.hp - a.hp) : front(inRange(x, y, U.rng + bonus, f)); if (!list.length) return false;
     const D = U.dmg * upMul(U.id) * grpMul(U.r) * (1 + TL('scroll') * 0.05) * mul, t = list[0], [tx, ty] = mobXY(t), c = RAR[U.r].c, ang = Math.atan2(ty - 10 - (y - 14), tx - x);
     s.face = tx > x + 4 ? -1 : 1; s.ang = ang;
     const sy = y - 18;
     (U.kind === 'melee' ? SFX.swing : U.kind === 'arrow' || U.kind === 'multi' ? SFX.bow : U.kind === 'chain' ? SFX.bolt : SFX.zap)();
-    if (U.kind === 'melee'){ damage(t, D); G.fx.push({ k: 'swipe', x: tx, y: ty - 12, a: ang, t: 0.22, T: 0.22, c, r: 16 + U.r * 3 }); spark(tx, ty - 12, c, 5 + U.r * 2); }
-    else if (U.kind === 'arrow' || U.kind === 'multi'){ (U.kind === 'multi' ? list.slice(0, U.n) : [t]).forEach((m, k) => G.shots.push({ f, k: U.id === 'star5' ? 'star' : 'arrow', x: x + (k - 1) * 3, y: sy, tgt: m, dmg: D, sp: 560, c, trail: [] })); }
-    else if (U.kind === 'magic' || U.kind === 'slow'){ G.shots.push({ f, k: U.kind === 'slow' ? 'ice' : FIRE[U.id] ? 'fire' : 'orb', x, y: sy, tx, ty, tgt: t, dmg: D, sp: 300, c: U.kind === 'slow' ? '#9fe8ff' : FIRE[U.id] ? '#ff8a2a' : c, aoe: U.aoe, slow: U.slow, trail: [], big: U.r >= 3 }); }
-    else if (U.kind === 'chain'){ let px = x, py = sy; list.slice(0, U.n).forEach(m => { const [mx, my] = mobXY(m); damage(m, D); if (U.slow) m.slowT = 1.2;
+    if (U.kind === 'melee'){ hitT(t, D, U.id);
+      if (U.id === 'sword4'){ s.hits = (s.hits || 0) + 1; if (s.hits % 4 === 0){ inRange(tx, ty, 60, f).forEach(m => hitT(m, D * 3)); G.fx.push({ k: 'swipe', x: tx, y: ty - 12, a: ang + 1.6, t: 0.3, T: 0.3, c: '#9ff0d0', r: 34 }); G.fx.push({ k: 'swipe', x: tx, y: ty - 12, a: ang - 1.6, t: 0.3, T: 0.3, c: '#9ff0d0', r: 34 }); float('회오리!', tx, ty - 34, '#9ff0d0'); } }
+      G.fx.push({ k: 'swipe', x: tx, y: ty - 12, a: ang, t: 0.22, T: 0.22, c, r: 16 + U.r * 3 }); spark(tx, ty - 12, c, 5 + U.r * 2); }
+    else if (U.kind === 'arrow' || U.kind === 'multi'){ (U.kind === 'multi' ? list.slice(0, U.n) : [t]).forEach((m, k) => G.shots.push({ f, U: U.id, k: U.id === 'star5' ? 'star' : 'arrow', x: x + (k - 1) * 3, y: sy, tgt: m, dmg: D, sp: 560, c, trail: [] })); }
+    else if (U.kind === 'magic' || U.kind === 'slow'){ G.shots.push({ f, U: U.id, k: U.kind === 'slow' ? 'ice' : FIRE[U.id] ? 'fire' : 'orb', x, y: sy, tx, ty, tgt: t, dmg: D, sp: 300, c: U.kind === 'slow' ? '#9fe8ff' : FIRE[U.id] ? '#ff8a2a' : c, aoe: U.aoe, slow: U.slow, trail: [], big: U.r >= 3 }); }
+    else if (U.kind === 'chain'){ let px = x, py = sy; list.slice(0, U.n).forEach(m => { const [mx, my] = mobXY(m); hitT(m, D, U.id); if (U.slow) m.slowT = 1.2 * (1 + TL('frost') * 0.1);
       const pts = [[px, py]]; for (let q = 1; q < 6; q++){ const f = q / 6; pts.push([px + (mx - px) * f + (Math.random() - .5) * 16, py + (my - 12 - py) * f + (Math.random() - .5) * 16]); } pts.push([mx, my - 12]);
       G.fx.push({ k: 'bolt', pts, t: 0.2, T: 0.2, c: U.id === 'arch5' ? '#ff9af0' : '#fff27a' }); spark(mx, my - 12, '#fff6a0', 6); px = mx; py = my - 12; }); }
     return true;
@@ -371,6 +440,15 @@
     for (let a = 0; a < 18; a++) for (let b = a + 1; b < 18; b++){ const A = T.grid[a], B = T.grid[b]; if (A && B && A.u.id === B.u.id && A.u.r < 3){ T.grid[a] = null; const u = pick(byRar(A.u.r + 1)); T.grid[b] = { u, cd: 0.3, pop: 1 }; { const [qx, qy] = cellXY(b, 1); burst(qx, qy, RAR[u.r].c, 16); } return; } }
     if (free.length && T.silver >= T.cost){ T.silver -= T.cost; T.cost += 1; const roll = Math.random(), r = roll < 0.012 ? 2 : roll < 0.14 ? 1 : 0; const i = pick(free); T.grid[i] = { u: pick(byRar(r)), cd: 0.3, pop: 1 }; return; }
     if (!free.length){ let lo = -1; T.grid.forEach((s, i) => { if (s && s.u.r === 0 && lo < 0) lo = i; }); if (lo >= 0 && T.silver < T.cost){ T.grid[lo] = null; T.silver += 10; } } }
+  function hitT(m, D, id){ if (!m || m.hp <= 0) return; let d = D, cb = 0;
+    if (id === 'bow2' && (m.boss || m.mbo)) d *= 1.5; if (id === 'bow1') cb = 0.10; if (id === 'bow3') cb = 0.20;
+    damage(m, d, cb); if (id === 'sword1' && Math.random() < 0.15) damage(m, d, cb);
+    if (m.hp <= 0) return;
+    if (id === 'sword2' && Math.random() < 0.08) m.stun = Math.max(m.stun || 0, 0.6);
+    if (id === 'ice2' && Math.random() < 0.10){ m.stun = Math.max(m.stun || 0, 1); m.slowT = Math.max(m.slowT, 1.5); }
+    if (id === 'bolt4' && Math.random() < 0.12) m.stun = Math.max(m.stun || 0, 0.8);
+    if (id === 'fire3') m.burn = { t: 3, dps: D * 0.3, acc: 0 };
+    if (id === 'bow4' && !m.boss) m.d = Math.max(0, m.d - 6); }
   function spark(x, y, c, n){ for (let i = 0; i < n; i++){ const a = Math.random() * 6.28, v = 80 + Math.random() * 140; G.fx.push({ k: 'sp', x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v - 30, t: 0.3, T: 0.3, c }); } }
   function boom(x, y, r, c, kind){ SFX.boom(); G.fx.push({ k: 'boom', x, y, r: r * 1.15, t: 0.35, T: 0.35, c });
     for (let i = 0; i < 10 + r / 3; i++){ const a = Math.random() * 6.28, v = 40 + Math.random() * r * 3; G.fx.push({ k: kind === 'ice' ? 'shard' : 'ember', x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v - 40, g: 160, t: 0.5, T: 0.5, c, s: 2 + Math.random() * 3, rot: Math.random() * 6 }); } }
@@ -389,19 +467,21 @@
     if (G.kind === 'raid') G.silver += dt * 7;
     if (G.kind === 'hunt' && G.t >= HUNT_T){ gameOver(true); return; }
     partnerAI(dt);
-    G.mobs.forEach(m => { m.stun = Math.max(0, (m.stun || 0) - dt); const sp = m.stun > 0 ? 0 : m.spd * (m.slowT > 0 ? 0.55 : 1); m.d += sp * dt; m.slowT -= dt; m.hit -= dt; m.kb = Math.max(0, (m.kb || 0) - dt * 6); });
+    G.mobs.forEach(m => { if (m.burn && m.hp > 0){ m.burn.t -= dt; m.burn.acc += dt; if (m.burn.acc >= 0.5){ m.burn.acc -= 0.5; damage(m, m.burn.dps * 0.5); if (Math.random() < 0.5){ const [bx, by] = mobXY(m); G.fx.push({ k: 'ember', x: bx + (Math.random() - .5) * 10, y: by - 14, vx: 0, vy: -40, t: 0.4, T: 0.4, c: '#ff7a2a', s: 2.5, rot: 0 }); } } if (m.burn.t <= 0) m.burn = null; } m.stun = Math.max(0, (m.stun || 0) - dt); const sp = m.stun > 0 ? 0 : m.spd * (m.slowT > 0 ? 0.55 : 1); m.d += sp * dt; m.slowT -= dt; m.hit -= dt; m.kb = Math.max(0, (m.kb || 0) - dt * 6); });
     G.mis = G.mis.map(v => Math.max(0, v - dt));
     G.mobs.forEach(m => { if (m.mbo){ m.life -= dt; if (m.life <= 0 && m.hp > 0){ m.hp = 0; float('미션 실패...', LW / 2, 200, '#ff8a8a'); } } });
     G.mobs = G.mobs.filter(m => m.hp > 0);
     (G.cards || []).forEach(c => { c.t -= dt; if (c.t <= 0 && !c.done){ c.done = true; const s2 = G.grid[c.i]; if (s2 && s2.u === c.u){ s2.hide = 0; place(c.i, c.u); } } }); if (G.cards) G.cards = G.cards.filter(c => !c.done);
-    G.grid.forEach((s, i) => { if (!s) return; if (s.hide > 0){ s.hide -= dt; return; } tickUnit(s, dt, ...cellXY(i), 0, 1); });
-    G.pt.grid.forEach((s, i) => { if (!s) return; tickUnit(s, dt, ...cellXY(i, 1), 0, 0.85, 1); });
+    const auraOf = grid => { const A = new Set(); grid.forEach((s, i) => { if (s && s.u.id === 'sword3'){ const c = i % COLS, r = Math.floor(i / COLS); [[-1,0],[1,0],[0,-1],[0,1],[-1,-1],[1,1],[-1,1],[1,-1]].forEach(([dx, dy]) => { const cc = c + dx, rr2 = r + dy; if (cc >= 0 && cc < COLS && rr2 >= 0 && rr2 < ROWS) A.add(rr2 * COLS + cc); }); } }); return A; };
+    G.aura0 = auraOf(G.grid); G.aura1 = auraOf(G.pt.grid);
+    G.grid.forEach((s, i) => { if (!s) return; if (s.hide > 0){ s.hide -= dt; return; } s.aura = G.aura0.has(i); tickUnit(s, dt, ...cellXY(i), 0, 1); });
+    G.pt.grid.forEach((s, i) => { if (!s) return; s.aura = G.aura1.has(i); tickUnit(s, dt, ...cellXY(i, 1), 0, 0.85, 1); });
     G.shots.forEach(b => { const [tx, ty] = b.tgt.hp > 0 ? (([u, v]) => [u, v - 12])(mobXY(b.tgt)) : [b.tx ?? b.x, b.ty ?? b.y]; b.tx = tx; b.ty = ty;
       const dx = tx - b.x, dy = ty - b.y, dd = Math.hypot(dx, dy), st = b.sp * dt;
       b.trail.push([b.x, b.y]); if (b.trail.length > 7) b.trail.shift(); b.a = Math.atan2(dy, dx);
       if (dd <= st){ b.done = true;
-        if (b.aoe){ inRange(tx, ty, b.aoe, b.f || 0).forEach(m => { damage(m, b.dmg); if (b.slow) m.slowT = 1.5; }); boom(tx, ty - 10, b.aoe, b.c, b.k); if (b.big) G.shake = Math.max(G.shake, 3); }
-        else { if (b.tgt.hp > 0) damage(b.tgt, b.dmg); spark(tx, ty - 12, b.c, 4); } }
+        if (b.aoe){ inRange(tx, ty, b.aoe, b.f || 0).forEach(m => { hitT(m, b.dmg, b.U); if (b.slow) m.slowT = 1.5 * (1 + TL('frost') * 0.1); }); boom(tx, ty - 10, b.aoe, b.c, b.k); if (b.big) G.shake = Math.max(G.shake, 3); }
+        else { if (b.tgt.hp > 0) hitT(b.tgt, b.dmg, b.U); spark(tx, ty - 12, b.c, 4); } }
       else { b.x += dx / dd * st; b.y += dy / dd * st; } });
     G.shots = G.shots.filter(b => !b.done);
     G.fx.forEach(f => { f.t -= dt; if (f.t <= 0 && f.hit){ const h = f.hit; f.hit = null; h(); } if (f.vx !== undefined){ f.x += f.vx * dt; f.y += f.vy * dt; f.vx *= 0.92; f.vy = f.vy * 0.92 + (f.g || 0) * dt; if (f.rot !== undefined) f.rot += dt * 8; } }); G.fx = G.fx.filter(f => f.t > 0);
@@ -410,16 +490,19 @@
     if (bannerS){ bannerS.t -= dt; if (bannerS.t <= 0) bannerS = null; }
     if (G.mobs.length > CAP || (G.waveT <= 0.05 && ((G.bossAlive && G.bossAlive.hp > 0) || (G.bossP && G.bossP.hp > 0)))) gameOver();
   }
-  function gameOver(win){ if (G.over) return; if (G.kind !== 'normal'){ G.over = true; const hunt = G.kind === 'hunt';
+  function giveChest(w){ G.chestTxt = ''; if (w < 3) return; let g = w < 12 ? 0 : w < 25 ? 1 : 2; if (g < 2 && Math.random() < 0.1) g++; if (addChest(g)) G.chestTxt = `<br><span style="font-size:13px;color:#ffd447">${CHS[g].e} ${CHS[g].n} 획득!</span>`; else G.chestTxt = '<br><span style="font-size:12px;color:#ff9a9a">상자 칸이 가득 차서 상자를 못 받았어요</span>'; }
+  function adDoubleBtn(gold, gem){ const b = document.getElementById('adDouble'); b.style.display = 'block'; b.disabled = !canReward(); b.textContent = passOn() ? '👑 프리미엄: 보상 2배 받기' : canReward() ? '📺 광고 보고 보상 2배' : '📺 광고 2배 (준비 중)';
+    b.onclick = async () => { if (await showRewarded()){ M.gold += gold; M.gem += gem; save(); b.style.display = 'none'; toast(`🪙 +${gold}` + (gem ? `  💎 +${gem}` : '')); } }; }
+  function gameOver(win){ if (G.over) return; if (G.kind !== 'normal'){ G.over = true; giveChest(G.kind === 'hunt' ? Math.floor(G.kills / 15) : (G.bosses || 0) * 6); const hunt = G.kind === 'hunt';
       const sc = hunt ? G.kills : (G.bosses || 0), gold = hunt ? Math.floor(G.kills * 2) : sc * 150, gem = hunt ? Math.floor(G.kills / 100) * 3 : sc * 4, key = hunt ? 'hb' : 'rb', nb = sc > (M[key] || 0);
       M.gold += gold; M.gem += gem; if (nb) M[key] = sc; qAdd('play'); save();
       document.getElementById('ovT').textContent = nb ? '🏆 최고 기록!' : hunt ? (win ? '사냥 종료!' : '패배...') : '레이드 종료';
       document.getElementById('ovS').innerHTML = hunt ? `처치한 몬스터 <b>${G.kills}</b>마리<br>최고 ${M.hb || 0}마리` : `처치한 보스 <b>${sc}</b>마리<br>최고 ${M.rb || 0}마리`;
-      document.getElementById('ovR').innerHTML = `🪙 +${gold}` + (gem ? ` &nbsp; 💎 +${gem}` : ''); document.getElementById('over').classList.remove('hide'); return; }
-    G.over = true; const rw = MODES[G.mode].rw, gold = Math.floor((G.wave * 12 + Math.floor(G.kills / 4) + (G.bosses || 0) * 50) * rw), gem = Math.floor(G.wave / 10) * 3 * (G.mode + 1), nb = G.wave > (M.bm[G.mode] || 0);
-    M.gold += gold; M.gem += gem; M.games++; if (nb){ M.bm[G.mode] = G.wave; if (G.mode === 0) M.best = G.wave; } qAdd('play'); qAdd('wave', G.wave, true); save();
+      document.getElementById('ovR').innerHTML = `🪙 +${gold}` + (gem ? ` &nbsp; 💎 +${gem}` : '') + (G.chestTxt || ''); adDoubleBtn(gold, gem); document.getElementById('over').classList.remove('hide'); return; }
+    G.over = true; giveChest(G.wave); const rw = MODES[G.mode].rw, gold = Math.floor((G.wave * 12 + Math.floor(G.kills / 4) + (G.bosses || 0) * 50) * rw), gem = Math.floor(G.wave / 10) * 3 * (G.mode + 1), nb = G.wave > (M.bm[G.mode] || 0);
+    M.gold += gold; M.gem += gem; M.games++; const nc = Math.min(12, Math.floor(G.wave / 3)); const got = {}; for (let i = 0; i < nc; i++){ const u = pick(byRar(rollW([0.6, 0.3, 0.09, 0.01, 0]))); M.cards[u.id] = (M.cards[u.id] || 0) + 1; got[u.name] = (got[u.name] || 0) + 1; } G.cardTxt = nc ? `<br><span style="font-size:12px;color:#9fe8ff">🎴 카드 ${nc}장: ${Object.entries(got).map(([k, v]) => k + (v > 1 ? '×' + v : '')).join(', ')}</span>` : ''; if (nb){ M.bm[G.mode] = G.wave; if (G.mode === 0) M.best = G.wave; } qAdd('play'); qAdd('wave', G.wave, true); save();
     document.getElementById('ovT').textContent = nb ? '🏆 최고 기록!' : '패배...'; document.getElementById('ovS').innerHTML = `${G.wave} 웨이브까지 버텼어요<br>처치한 몬스터 ${G.kills}마리`;
-    document.getElementById('ovR').innerHTML = `🪙 +${gold}` + (gem ? ` &nbsp; 💎 +${gem}` : ''); document.getElementById('over').classList.remove('hide'); }
+    document.getElementById('ovR').innerHTML = `🪙 +${gold}` + (gem ? ` &nbsp; 💎 +${gem}` : '') + (G.cardTxt || '') + (G.chestTxt || ''); adDoubleBtn(gold, gem); document.getElementById('over').classList.remove('hide'); }
 
   // ---------- draw ----------
   function rr(x, y, w, h, r){ ctx.beginPath(); ctx.roundRect(x, y, w, h, r); }
@@ -530,6 +613,7 @@
       ctx.save(); ctx.translate(x + (m.flip ? -kb : kb), y + 6 - hop); ctx.rotate(tilt); if (m.flip) ctx.scale(-1, 1); ctx.scale(sq * asx, asy / sq); if (skew) ctx.transform(1, 0, skew, 1, 0, 0); if (aoy) ctx.translate(0, aoy / asy);
       if (m.slowT > 0){ ctx.filter = 'hue-rotate(160deg) saturate(1.4) brightness(1.1)'; }
       ctx.drawImage(im, -w / 2, -h, w, h); ctx.filter = 'none';
+      if (m.burn){ ctx.globalAlpha = 0.25 + 0.1 * Math.sin(G.t * 12); ctx.globalCompositeOperation = 'lighter'; ctx.drawImage(whiteOf(im), -w / 2, -h, w, h); ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = 1; }
       if (m.hit > 0){ ctx.globalAlpha = Math.min(1, m.hit * 8) * 0.85; ctx.drawImage(whiteOf(im), -w / 2, -h, w, h); ctx.globalAlpha = 1; }
       ctx.restore(); }
     else { ctx.fillStyle = '#7ad07a'; ctx.beginPath(); ctx.arc(x, y - 6, 9, 0, 6.28); ctx.fill(); }
@@ -565,6 +649,7 @@
     // mage charge glow at feet
     if (a > 0 && K2 !== 'melee' && K2 !== 'arrow' && K2 !== 'multi'){ const k = Math.sin(Math.min(1, ph / 0.6) * Math.PI); ctx.globalAlpha = 0.7 * k; ctx.strokeStyle = R.c; ctx.lineWidth = 2; ctx.beginPath(); ctx.ellipse(0, 14, 20 * k + 4, 7 * k + 2, 0, 0, 6.28); ctx.stroke(); ctx.globalAlpha = 1; }
     ctx.fillStyle = 'rgba(0,0,0,.3)'; ctx.beginPath(); ctx.ellipse(ox * 0.5, 15, 13, 4, 0, 0, 6.28); ctx.fill();
+    if (s.aura){ ctx.strokeStyle = `rgba(255,220,120,${0.35 + 0.25 * Math.sin(G.t * 5)})`; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.ellipse(0, 14, 13, 4.2, 0, 0, 6.28); ctx.stroke(); }
     if (s.u.r >= 3){ for (let q = 0; q < 2; q++){ const t = (G.t * 0.8 + q * 0.5 + x * 0.01) % 1; ctx.globalAlpha = 1 - t; ctx.fillStyle = R.c; ctx.beginPath(); ctx.arc(Math.sin(t * 9 + q * 3) * 12, 12 - t * 34, 1.6, 0, 6.28); ctx.fill(); } ctx.globalAlpha = 1; }
     const base = ART['u_' + s.u.id], im = (pose && ART['ua_' + s.u.id]) || base;
     if (im){ const hb = 42 + s.u.r * 1.5, h = im !== base && base ? hb * im.height / base.height : hb, w = h * im.width / im.height;
@@ -579,7 +664,7 @@
         ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(0, 0, 20, a0 + 0.4, a1); ctx.arc(-1.5, 0, 18, a1, a0 + 0.4, true); ctx.fill(); ctx.restore(); ctx.shadowBlur = 0; ctx.globalAlpha = 1; } }
     // archer string flash
     if (a > 0 && (K2 === 'arrow' || K2 === 'multi')){ const st = seg(ph, 0.45, 0.6); if (st > 0 && st < 1){ ctx.globalAlpha = 1 - st; ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(fx * 10, -16 + fy * 6, 6 + st * 10, 0, 6.28); ctx.stroke(); ctx.globalAlpha = 1; } }
-    const SKd = SKILL[s.u.id]; if (SKd){ const f = Math.min(1, (s.sk || 0) / SKd.cd); ctx.fillStyle = '#000a'; rr(-15, 21, 30, 4, 2); ctx.fill(); ctx.fillStyle = f >= 0.95 ? '#fff' : '#ff6a8a'; rr(-15, 21, 30 * f, 4, 2); ctx.fill(); }
+    const SKd = SKILL[s.u.id]; if (SKd){ const f = Math.min(1, (s.sk || 0) / (SKd.cd * (1 - TL('heart') * 0.04))); ctx.fillStyle = '#000a'; rr(-15, 21, 30, 4, 2); ctx.fill(); ctx.fillStyle = f >= 0.95 ? '#fff' : '#ff6a8a'; rr(-15, 21, 30 * f, 4, 2); ctx.fill(); }
     if (canMerge){ ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.5; ctx.setLineDash([3, 3]); ctx.lineDashOffset = -G.t * 10; ctx.beginPath(); ctx.ellipse(0, 14, 21, 7, 0, 0, 6.28); ctx.stroke(); ctx.setLineDash([]);
       ctx.fillStyle = '#fff'; ctx.font = '900 10px sans-serif'; ctx.textAlign = 'center'; ctx.fillText('▲', 15, -24 + Math.sin(G.t * 5) * 2); }
     ctx.restore();
@@ -647,12 +732,12 @@
   }
   function drawSel(){ const i = G.sel; if (i < 0 || !G.grid[i] || G.panel) { G.sel = -1; return; } const s2 = G.grid[i], u = s2.u, [x, y] = cellXY(i), R = RAR[u.r];
     ctx.fillStyle = 'rgba(255,255,255,.07)'; ctx.strokeStyle = R.c; ctx.lineWidth = 1.5; ctx.setLineDash([4, 4]); ctx.beginPath(); ctx.arc(x, y, u.rng, 0, 6.28); ctx.fill(); ctx.stroke(); ctx.setLineDash([]);
-    const bx = Math.max(14, Math.min(LW - 194, x - 90)), byy = y - CELL / 2 - 96; ctx.fillStyle = 'rgba(16,12,32,.95)'; rr(bx, byy, 180, 88, 12); ctx.fill(); ctx.strokeStyle = R.c; ctx.lineWidth = 2; ctx.stroke();
+    const bx = Math.max(8, Math.min(LW - 208, x - 100)), byy = y - CELL / 2 - 100; ctx.fillStyle = 'rgba(16,12,32,.95)'; rr(bx, byy, 200, 92, 12); ctx.fill(); ctx.strokeStyle = R.c; ctx.lineWidth = 2; ctx.stroke();
     ctx.textAlign = 'left'; ctx.fillStyle = R.c; ctx.font = '900 14px sans-serif'; ctx.fillText(`${R.n} · ${u.name}`, bx + 10, byy + 20);
-    const dmg = Math.floor(u.dmg * upMul(u.id) * grpMul(u.r) * (1 + TL('scroll') * 0.05)); ctx.fillStyle = '#c8c0ea'; ctx.font = '700 11px sans-serif'; ctx.fillText(`공격력 ${fmt(dmg)} · 공속 ${u.spd} · 사거리 ${u.rng}`, bx + 10, byy + 38);
+    const dmg = Math.floor(u.dmg * upMul(u.id) * grpMul(u.r) * (1 + TL('scroll') * 0.05)); ctx.fillStyle = '#c8c0ea'; ctx.font = '700 11px sans-serif'; ctx.fillText(`공격력 ${fmt(dmg)} · 공속 ${u.spd} · 사거리 ${u.rng}`, bx + 10, byy + 36); { const A = ABIL[u.id]; if (A){ ctx.fillStyle = '#ffd447'; ctx.font = '800 10px sans-serif'; ctx.fillText(`✦ ${A[0]}: ${A[1]}`, bx + 10, byy + 48); } }
     const pair = u.r < 3 ? G.grid.findIndex((o, j) => o && j !== i && o.u.id === u.id) : -1;
-    btn(bx + 10, byy + 48, 76, 30, pair >= 0 ? ['#8cf08c', '#3cb84c'] : ['#3a3450', '#2a2440'], () => { if (pair >= 0){ merge(pair, i); G.sel = -1; } }, [u.r >= 3 ? '합성불가' : '합성', ''], pair >= 0 ? '#06260c' : '#888', 13, 0);
-    btn(bx + 94, byy + 48, 76, 30, ['#ff8a8a', '#c84a4a'], () => { sell(i); G.sel = -1; }, [`판매 +${[10, 30, 90, 270, 800][u.r]}`, ''], '#fff', 12, 0); }
+    btn(bx + 10, byy + 54, 86, 30, pair >= 0 ? ['#8cf08c', '#3cb84c'] : ['#3a3450', '#2a2440'], () => { if (pair >= 0){ merge(pair, i); G.sel = -1; } }, [u.r >= 3 ? '합성불가' : '합성', ''], pair >= 0 ? '#06260c' : '#888', 13, 0);
+    btn(bx + 104, byy + 54, 86, 30, ['#ff8a8a', '#c84a4a'], () => { sell(i); G.sel = -1; }, [`판매 +${[10, 30, 90, 270, 800][u.r]}`, ''], '#fff', 12, 0); }
   const PRESS = { b: null, t: 0 };
   function shade(hex, k){ if (!/^#[0-9a-f]{6}$/i.test(hex)) return hex; const n = parseInt(hex.slice(1), 16); let r = n >> 16, g = (n >> 8) & 255, b = n & 255; r = Math.round(r * k); g = Math.round(g * k); b = Math.round(b * k); return `rgb(${Math.min(255, r)},${Math.min(255, g)},${Math.min(255, b)})`; }
   function btn(x, y, w, h, cols, fn, lines, tc, f1 = 22, f2 = 14){ const rad = Math.min(12, h / 2.6), pressed = PRESS.b && PRESS.b.x === x && PRESS.b.y === y && performance.now() - PRESS.t < 120, oy = pressed ? 2 : 0, lip = Math.max(2, Math.min(4, h * 0.1));
@@ -740,16 +825,17 @@
   $('hBgm').onclick = () => { BGM.on = !BGM.on; M.bgm = BGM.on; save(); if (BGM.on) BGM.kick(); else BGM.stop(); audioUI(); };
   $('hSfx').onclick = () => { MUTE = !MUTE; M.sfx = !MUTE; save(); audioUI(); };
   function renderHome(){ dayRoll(); renderShop(); audioUI(); BGM.play('home');
-    $('hGold').textContent = M.gold.toLocaleString(); $('hGem').textContent = M.gem; $('hBest').textContent = '🏆 ' + M.best + '웨이브';
+    $('hGold').textContent = M.gold.toLocaleString(); $('hGem').textContent = M.gem; $('hBest').textContent = '🏆 ' + M.best;
     const top = [...UNITS].filter(u => M.seen[u.id]).sort((a, b) => b.r - a.r || (M.lv[b.id] || 0) - (M.lv[a.id] || 0));
     const hero = top[0] || UB('drag5'), sides = top.filter(u => u !== hero).slice(0, 2); $('hHero').src = uimg(hero.id);
     $('hSideL').src = uimg((sides[0] || UB('sword1')).id); $('hSideR').src = uimg((sides[1] || UB('mage1')).id);
     $('hTip').textContent = M.best ? `최고 ${M.best}웨이브 · 판이 끝나면 골드 획득` : '몬스터 100마리가 넘으면 패배!';
     // units
-    $('uGrid').innerHTML = UNITS.map(u => { const R = RAR[u.r], lv = M.lv[u.id] || 0, c = upCost(u), lock = !M.seen[u.id];
-      return `<div class="uc ${lock ? 'lock' : ''}" style="border-color:${R.c};background:linear-gradient(${R.g}55,#14102a)"><span class="lv">Lv.${lv + 1}</span><img src="${uimg(u.id)}"><div class="nm" style="color:${R.c}">${lock ? '???' : u.name}</div>
-        <button data-u="${u.id}" ${lock || M.gold < c ? 'disabled' : ''}>${lock ? '미발견' : '🪙 ' + c.toLocaleString()}</button></div>`; }).join('');
-    $('uGrid').querySelectorAll('button[data-u]').forEach(b => b.onclick = () => { const u = UB(b.dataset.u), c = upCost(u); if (M.gold < c) return; M.gold -= c; M.lv[u.id] = (M.lv[u.id] || 0) + 1; save(); SFX.merge(); toast(`${u.name} Lv.${M.lv[u.id] + 1}!`); renderHome(); });
+    $('uGrid').innerHTML = UNITS.map(u => { const R = RAR[u.r], lv = M.lv[u.id] || 0, c = lvGold(u), need = cardNeed(lv), have = M.cards[u.id] || 0, lock = !M.seen[u.id] && !have, ok = !lock && have >= need && M.gold >= c;
+      return `<div class="uc ${lock ? 'lock' : ''}" style="border-color:${R.c};background:linear-gradient(${R.g}55,#14102a)"><span class="lv">Lv.${lv + 1}</span><img src="${uimg(u.id)}"><div class="nm" style="color:${R.c}">${lock ? '???' : u.name}</div><div class="cn" style="color:#ffd447">${lock ? '' : '✦ ' + ABIL[u.id][0]}</div>
+        <div class="cbar"><i style="width:${Math.min(100, have / need * 100)}%"></i></div><div class="cn">🎴 ${have}/${need}</div>
+        <button data-u="${u.id}" ${ok ? '' : 'disabled'}>${lock ? '미발견' : have < need ? '카드 부족' : '🪙 ' + c.toLocaleString()}</button></div>`; }).join('');
+    $('uGrid').querySelectorAll('button[data-u]').forEach(b => b.onclick = () => { const u = UB(b.dataset.u), lv = M.lv[u.id] || 0, c = lvGold(u), need = cardNeed(lv); if (M.gold < c || (M.cards[u.id] || 0) < need) return; M.gold -= c; M.cards[u.id] -= need; M.lv[u.id] = lv + 1; save(); SFX.epic(); toast(`${u.name} Lv.${M.lv[u.id] + 1}!`); renderHome(); });
     $('recList').innerHTML = RECIPES.map(rc => `<div class="row"><img src="${uimg(rc.out)}" style="height:44px"><div class="t" style="color:#ff8aa8">${UB(rc.out).name}<small>${rc.need.map(id => UB(id).name).join(' + ')}</small></div></div>`).join('');
     // shop
     const freeOk = M.free !== today();
@@ -774,20 +860,80 @@
     $('xmodes').innerHTML = [['hunt', '🏹 사냥', '3분 동안 많이 잡기', '#8cf08c', M.hb], ['raid', '👹 보스 레이드', '보스만 연속 등장', '#ff7a7a', M.rb]].map(([k, n, d, c, b]) => `<button data-x="${k}" style="color:${c}">${n} ${3 - (tk[k] || 0)}/3<small>${d} · 최고 ${b || 0}</small></button>`).join('');
     $('xmodes').querySelectorAll('button').forEach(b => b.onclick = () => { const k = b.dataset.x; M.tk = M.tk || {}; if ((M.tk[k] || 0) >= 3){ toast('오늘 입장권을 다 썼어요 (내일 충전)'); return; } M.tk[k] = (M.tk[k] || 0) + 1; save(); startGame(k); });
     // treasures
-    $('trGrid').innerHTML = TREAS.map(t => { const lv = TL(t.id); return `<div class="tc ${lv ? '' : 'lock'}"><div class="e">${t.e}</div><div class="n">${t.n} ${lv ? 'Lv.' + lv : ''}</div><div class="d">${t.d(Math.max(1, lv))}</div></div>`; }).join('');
-    { const pool = TREAS.filter(t => TL(t.id) < TR_MAX); $('trOdds').innerHTML = pool.length ? `획득 확률: 최대 레벨이 아닌 보물 ${pool.length}종 중 균등 · 각 ${(100 / pool.length).toFixed(2)}% · <a href="prob.html" target="_blank" style="color:#9a92c0">확률 정보</a>` : '모든 보물이 최대 레벨이에요'; }
-    $('bTr').disabled = M.gem < TR_COST; $('bTr10').disabled = M.gem < 270;
-    $('dTreas').style.display = M.gem >= TR_COST ? 'block' : 'none';
+    $('trGrid').innerHTML = TREAS.map(t => { const lv = TL(t.id), G2 = RGR[t.g]; return `<div class="tc ${lv ? '' : 'lock'}" style="border-color:${G2.c}88"><span class="gr" style="background:${G2.c};color:#111">${G2.n}</span><div class="e">${t.e}</div><div class="n">${t.n} ${lv ? 'Lv.' + lv : ''}</div><div class="d">${t.d(Math.max(1, lv))}</div></div>`; }).join('');
+    $('relSum').textContent = `보유 ${TREAS.filter(t => TL(t.id)).length}/${TREAS.length}종 · 유물 상자는 🎴 소환 탭에서 열 수 있어요`;
+    $('uOdds').innerHTML = RAR.map((R, k) => `<span style="color:${R.c}">${R.n} ${(UODDS[k] * 100).toFixed(1)}%</span>`).join('');
+    $('rOdds').innerHTML = RGR.map(g => `<span style="color:${g.c}">${g.n} ${Math.round(g.p * 100)}%</span>`).join('');
+    $('bU1').disabled = M.gem < 50; $('bU10').disabled = M.gem < 450; $('bR1').disabled = M.gem < 40; $('bR10').disabled = M.gem < 360;
+    const fs = M.freeSum !== today(); $('bUfree').disabled = !fs; $('bUfree').textContent = fs ? '🎁 오늘의 무료 소환 (1회)' : '무료 소환은 내일 다시';
+    renderChests(); const fcl = renderFC(); { const a = M.adSum && M.adSum.d === today() ? M.adSum.n : 0; $('bUad').textContent = canReward() ? `📺 광고 보고 소환 (${3 - a}/3)` : '📺 광고 소환 (준비 중)'; $('bUad').disabled = !canReward() || a >= 3; }
+    $('dSum').style.display = fs || M.gem >= 50 || !fcl ? 'block' : 'none'; $('dTreas').style.display = 'none';
     // dots
     $('dShop').style.display = freeOk || (passOn() && M.passGem !== today()) ? 'block' : 'none'; $('dQuest').style.display = attOk || QUESTS.some(q => (M.q[q.id] || 0) >= q.goal && !M.qc[q.id]) ? 'block' : 'none';
-    $('dUnits').style.display = UNITS.some(u => M.seen[u.id] && M.gold >= upCost(u)) ? 'block' : 'none';
+    $('dUnits').style.display = UNITS.some(u => (M.cards[u.id] || 0) >= cardNeed(M.lv[u.id] || 0) && M.gold >= lvGold(u)) ? 'block' : 'none';
   }
+  const rollW = ws => { let r = Math.random(), k = 0; for (; k < ws.length - 1; k++){ if (r < ws[k]) break; r -= ws[k]; } return k; };
+  function pullUnits(n, cost){ if (M.gem < cost) return; M.gem -= cost; const out = [];
+    for (let i = 0; i < n; i++){ let r = rollW(UODDS); if (n === 10 && i === 9 && !out.some(o => o.r >= 2)) r = Math.max(2, rollW([0, 0, 0.11, 0.035, 0.005].map(v => v / 0.15))); const u = pick(byRar(r)); M.cards[u.id] = (M.cards[u.id] || 0) + 1; M.seen[u.id] = 1; out.push({ r, img: uimg(u.id), name: u.name, sub: RAR[r].n, c: RAR[r].c, g: RAR[r].g }); }
+    save(); showGacha('🎁', out); }
+  function pullRelics(n, cost){ if (M.gem < cost) return; M.gem -= cost; const out = [];
+    for (let i = 0; i < n; i++){ const g = rollW(RGR.map(x => x.p)), pool = TREAS.filter(t => t.g === g), t = pick(pool); let sub;
+      if (TL(t.id) >= TR_MAX){ M.gold += 500; sub = '최대 레벨 → 🪙500'; } else { M.tr[t.id] = TL(t.id) + 1; sub = TL(t.id) === 1 ? 'NEW!' : 'Lv.' + TL(t.id); }
+      out.push({ r: g, e: t.e, name: t.n, sub, c: RGR[g].c, g: '#2a1a08' }); }
+    save(); showGacha('🏺', out); }
+  function showGacha(icon, out){ const o = $('gacha'), cards = $('gCards'), ok = $('gOk'), ch = $('gChest'), tap = $('gTap'); ch.textContent = icon; ch.className = 'chest'; ch.style.display = ''; tap.style.display = ''; cards.innerHTML = ''; ok.style.display = 'none'; o.classList.add('on'); SFX.card();
+    const best = Math.max(...out.map(x => x.r));
+    o.onclick = () => { if (ch.style.display === 'none') return; ch.classList.add('open'); tap.style.display = 'none'; if (best >= 3) SFX.myth(); else if (best >= 2) SFX.epic(); else SFX.rare();
+      setTimeout(() => { ch.style.display = 'none'; cards.className = 'gcards' + (out.length === 1 ? ' one' : '');
+        cards.innerHTML = out.map(x => `<div class="gc ${x.r >= 2 ? 'hi' : ''}"><div class="in"><div class="b">?</div><div class="f" style="border-color:${x.c};color:${x.c};background:linear-gradient(${x.g},#14102a)">${x.img ? `<img src="${x.img}">` : `<div class="e">${x.e}</div>`}<b style="color:#fff">${x.name}</b><i>${x.sub}</i></div></div></div>`).join('');
+        [...cards.children].forEach((c, k) => setTimeout(() => { c.classList.add('flip'); if (out[k].r >= 2) SFX.rare(); else SFX.card(); }, 120 + k * 140));
+        setTimeout(() => ok.style.display = 'block', 220 + out.length * 140); }, 330); };
+    ok.onclick = e => { e.stopPropagation(); o.classList.remove('on'); o.onclick = null; renderHome(); }; }
+  // ---------- chests ----------
+  const MIN = 60000, CHS = [ { n: '나무 상자', e: '📦', t: 15 * MIN, c: '#c89a5a' }, { n: '은 상자', e: '🧰', t: 60 * MIN, c: '#c8d0e0' }, { n: '황금 상자', e: '💰', t: 180 * MIN, c: '#ffd447' } ];
+  const CHW = [ [0.70, 0.25, 0.05, 0, 0], [0.55, 0.33, 0.10, 0.02, 0], [0.45, 0.35, 0.15, 0.045, 0.005] ];
+  M.chests = M.chests || [null, null, null, null];
+  const chLeft = c => c.at ? Math.max(0, c.at + CHS[c.g].t - nowT()) : CHS[c.g].t;
+  const fmtT = ms => { const m = Math.ceil(ms / MIN); return m >= 60 ? `${Math.floor(m / 60)}시간 ${m % 60}분` : `${m}분`; };
+  function addChest(g){ const i = M.chests.findIndex(c => !c); if (i < 0) return false; M.chests[i] = { g, at: 0 }; return true; }
+  function chestLoot(g){ const out = []; const gold = [150, 500, 1500][g] + Math.floor(Math.random() * [150, 400, 1000][g]); M.gold += gold; out.push({ r: g, e: '🪙', name: '골드', sub: '+' + gold, c: '#ffd447', g: '#3a2a08' });
+    const gem = [Math.floor(Math.random() * 4), 5 + Math.floor(Math.random() * 6), 20 + Math.floor(Math.random() * 11)][g]; if (gem){ M.gem += gem; out.push({ r: g, e: '💎', name: '보석', sub: '+' + gem, c: '#6ee0ff', g: '#0a2a3a' }); }
+    const cnt = {}; for (let i = 0; i < [3, 8, 20][g]; i++){ const u = pick(byRar(rollW(CHW[g]))); cnt[u.id] = (cnt[u.id] || 0) + 1; M.cards[u.id] = (M.cards[u.id] || 0) + 1; M.seen[u.id] = 1; }
+    Object.entries(cnt).sort((a, b) => UB(b[0]).r - UB(a[0]).r).forEach(([id, n]) => { const u = UB(id); out.push({ r: u.r, img: uimg(id), name: u.name, sub: '카드 ×' + n, c: RAR[u.r].c, g: RAR[u.r].g }); });
+    if (g === 2 && Math.random() < 0.3){ const rg = rollW(RGR.map(x => x.p)), t = pick(TREAS.filter(x => x.g === rg)); if (TL(t.id) < TR_MAX){ M.tr[t.id] = TL(t.id) + 1; out.push({ r: rg, e: t.e, name: t.n, sub: '유물 Lv.' + TL(t.id), c: RGR[rg].c, g: '#2a1a08' }); } }
+    return out; }
+  function openChestAt(i){ const c = M.chests[i]; if (!c) return; M.chests[i] = null; const out = chestLoot(c.g); save(); showGacha(CHS[c.g].e, out); }
+  function sheet(html){ const e = $('sheet'); e.innerHTML = html; e.classList.add('on'); }
+  const closeSheet = () => $('sheet').classList.remove('on');
+  function tapChest(i){ const c = M.chests[i]; if (!c) return; const C = CHS[c.g], left = chLeft(c), running = M.chests.some(x => x && x.at && chLeft(x) > 0);
+    if (c.at && left <= 0){ openChestAt(i); return; }
+    const gemCost = Math.max(1, Math.ceil(left / (3 * MIN)));
+    sheet(`<h3>${C.e} ${C.n}</h3><div class="sub" style="text-align:left">${c.at ? `열리기까지 ${fmtT(left)}` : `여는 데 ${fmtT(C.t)} 걸려요`} · 골드, 보석, 수호자 카드 ${[3, 8, 20][c.g]}장${c.g === 2 ? ', 30% 확률로 유물' : ''}</div>
+      ${!c.at ? `<button class="sbtn" id="shStart" ${running ? 'disabled' : ''}>${running ? '다른 상자를 여는 중이에요' : '⏰ 열기 시작'}</button>` : ''}
+      <button class="sbtn" id="shGem" style="background:linear-gradient(#c9a8ff,#7a4ad8);color:#fff" ${M.gem < gemCost ? 'disabled' : ''}>💎 ${gemCost}개로 바로 열기</button>
+      ${c.at ? `<button class="sbtn" id="shAd" style="background:linear-gradient(#6ee0ff,#2a8ad8);color:#fff" ${canReward() ? '' : 'disabled'}>${passOn() ? '👑 프리미엄: 30분 단축' : canReward() ? '📺 광고 보고 30분 단축' : '📺 광고 준비 중'}</button>` : ''}
+      <button class="btn2" id="shX">닫기</button>`);
+    if ($('shStart')) $('shStart').onclick = () => { c.at = nowT(); save(); closeSheet(); renderHome(); };
+    $('shGem').onclick = () => { if (M.gem < gemCost) return; M.gem -= gemCost; closeSheet(); openChestAt(i); };
+    if ($('shAd')) $('shAd').onclick = async () => { if (await showRewarded()){ c.at -= 30 * MIN; save(); closeSheet(); renderHome(); toast('30분 단축!'); } };
+    $('shX').onclick = closeSheet; }
+  function renderChests(){ $('chests').innerHTML = M.chests.map((c, i) => { if (!c) return `<div class="chs empty"><div class="ce">▫️</div>빈 칸</div>`; const C = CHS[c.g], left = chLeft(c);
+      const st = c.at && left <= 0 ? 'ready' : c.at ? 'run' : ''; return `<div class="chs ${st}" data-c="${i}" style="${st ? '' : `border-color:${C.c}88`}"><div class="ce">${C.e}</div>${st === 'ready' ? '열기!' : st === 'run' ? fmtT(left) : C.n}</div>`; }).join('');
+    $('chests').querySelectorAll('[data-c]').forEach(e => e.onclick = () => tapChest(+e.dataset.c)); }
+  setInterval(() => { if (!home.classList.contains('hide')) { renderChests(); renderFC(); } }, 20000);
+  const FC_T = 4 * 60 * MIN; M.fcAt = M.fcAt || 0;
+  function renderFC(){ const left = Math.max(0, M.fcAt + FC_T - nowT()); $('fcTxt').textContent = left ? `다음 상자까지 ${fmtT(left)}` : '4시간마다 무료로 열 수 있어요 (골드·보석·카드 3장)'; $('bFC').disabled = left > 0; $('bFC').textContent = left ? fmtT(left) : '열기'; return left; }
+  $('bFC').onclick = () => { if (renderFC() > 0) return; M.fcAt = nowT(); const out = chestLoot(0); save(); showGacha('📦', out); };
+  $('bUad').onclick = async () => { M.adSum = M.adSum && M.adSum.d === today() ? M.adSum : { d: today(), n: 0 }; if (M.adSum.n >= 3){ toast('오늘 광고 소환을 다 썼어요'); return; } if (await showRewarded()){ M.adSum.n++; M.gem += 50; pullUnits(1, 50); } };
+  $('bU1').onclick = () => pullUnits(1, 50); $('bU10').onclick = () => pullUnits(10, 450);
+  $('bUfree').onclick = () => { if (M.freeSum === today()) return; M.freeSum = today(); M.gem += 50; pullUnits(1, 50); };
+  $('bR1').onclick = () => pullRelics(1, 40); $('bR10').onclick = () => pullRelics(10, 360);
   function pullTr(n, cost){ if (M.gem < cost) return; const pool = TREAS.filter(t => TL(t.id) < TR_MAX); if (!pool.length){ toast('모든 보물이 최대 레벨이에요!'); return; }
     M.gem -= cost; const got = {}; for (let i = 0; i < n; i++){ const p2 = TREAS.filter(t => TL(t.id) < TR_MAX); if (!p2.length) break; const t = p2[Math.floor(Math.random() * p2.length)]; M.tr[t.id] = TL(t.id) + 1; got[t.n] = (got[t.n] || 0) + 1; }
     save(); SFX.epic(); toast(Object.entries(got).map(([k, v]) => `${k}${v > 1 ? ' x' + v : ''}`).join(', ')); renderHome(); }
-  $('bTr').onclick = () => pullTr(1, TR_COST); $('bTr10').onclick = () => pullTr(10, 270);
   let quitT = 0; window.goHomeConfirm = function(){ if (G.over) return; if (performance.now() - quitT < 2000){ gameOver(); return; } quitT = performance.now(); float('한 번 더 누르면 포기하고 보상받기', LW / 2, 470, '#ffb0b0'); };
   if (!Object.keys(M.seen).length){ ['sword1', 'bow1', 'mage1'].forEach(id => M.seen[id] = 1); save(); }
+  if (!M.cardInit){ M.cardInit = 1; ['sword1', 'bow1', 'mage1'].forEach(id => M.cards[id] = (M.cards[id] || 0) + 2); M.gem += 100; save(); }
   resize(); newGame(); renderHome(); requestAnimationFrame(frame);
   window.__G = () => G; window.__T = { summon, merge, gamble, makeMyth, recipeReady, place, UB };
 })();
