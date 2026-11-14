@@ -31,7 +31,7 @@
   #home.hide{display:none}
   #home:before{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(10,8,24,.55),rgba(10,8,24,.1) 35%,rgba(10,8,24,.25) 65%,rgba(10,8,24,.85))}
   .hbar{position:relative;display:flex;gap:6px;align-items:center;padding:12px 12px 0}
-  .pill{background:rgba(10,8,24,.75);border:1.5px solid rgba(255,255,255,.15);border-radius:20px;padding:5px 12px;font-weight:900;font-size:14px;display:flex;align-items:center;gap:4px}
+  .pill{white-space:nowrap;background:rgba(10,8,24,.75);border:1.5px solid rgba(255,255,255,.15);border-radius:20px;padding:5px 12px;font-weight:900;font-size:14px;display:flex;align-items:center;gap:4px}
   .hpage{position:relative;flex:1;overflow-y:auto;padding:10px 14px;display:none}
   .hpage.on{display:flex;flex-direction:column}
   #pgBattle{align-items:center;justify-content:flex-end;padding-bottom:18px}
@@ -92,7 +92,7 @@
 </style></head><body><div id="wrap">
 <canvas id="c"></canvas>
 <div id="home">
-  <div class="hbar"><div class="pill">🪙 <span id="hGold">0</span></div><div class="pill">💎 <span id="hGem">0</span></div><div style="flex:1"></div><div class="pill" id="hBest">🏆 0</div></div>
+  <div class="hbar"><div class="pill">🪙 <span id="hGold">0</span></div><div class="pill">💎 <span id="hGem">0</span></div><div style="flex:1"></div><div class="pill" id="hBgm" style="padding:5px 9px">🎵</div><div class="pill" id="hSfx" style="padding:5px 9px">🔊</div><div class="pill" id="hBest">🏆 0</div></div>
   <div class="hpage on" id="pgBattle">
     <div class="ttl">운빨 수호대<small>RANDOM DEFENSE</small></div><div class="sub" style="margin-top:6px">랜덤 소환 · 합성 · 신화 조합 디펜스</div>
     <div class="heroWrap"><div class="glow"></div><img class="side" id="hSideL" style="left:6%" alt=""><img id="hHero" alt=""><img class="side" id="hSideR" style="right:6%" alt=""></div>
@@ -104,7 +104,7 @@
     <div class="card"><h3>✨ 신화 조합식</h3><div id="recList"></div></div></div>
   <div class="hpage" id="pgShop"><div class="card" style="border-color:#ffd447"><h3>👑 프리미엄</h3><div id="shopPrem"></div></div><div class="card"><h3>💎 보석 상점</h3><div id="shopPay"></div></div><div class="card"><h3>무료 보급</h3><div id="shopFree"></div></div><div class="card"><h3>보석 교환</h3><div id="shopGem"></div></div></div>
   <div class="hpage" id="pgTreas"><div class="card"><h3>💠 보물 뽑기</h3><div class="sub" style="text-align:left">보물은 모든 전투에 효과가 적용돼요. 같은 보물이 또 나오면 레벨업! (최대 Lv.10)</div>
-    <button class="bigbtn" id="bTr" style="width:100%;font-size:18px;animation:none">💎 30 · 보물 1회 뽑기</button><button class="btn2" id="bTr10">💎 270 · 10회 뽑기 (10% 할인)</button></div>
+    <button class="bigbtn" id="bTr" style="width:100%;font-size:18px;animation:none">💎 30 · 보물 1회 뽑기</button><button class="btn2" id="bTr10">💎 270 · 10회 뽑기 (10% 할인)</button><div class="sub" id="trOdds" style="text-align:left;margin-top:8px;font-size:11px"></div></div>
     <div class="card"><h3>내 보물</h3><div class="tgrid" id="trGrid"></div></div></div>
   <div class="hpage" id="pgQuest"><div class="card"><h3>📅 출석</h3><div id="attList"></div></div><div class="card"><h3>오늘의 퀘스트</h3><div id="qList"></div></div></div>
   <div class="tabs"><button data-p="pgShop"><b>🛒</b>상점<i class="dot" id="dShop"></i></button><button data-p="pgUnits"><b>🧙</b>수호자<i class="dot" id="dUnits"></i></button><button data-p="pgBattle" class="on"><b>⚔️</b>전투</button><button data-p="pgTreas"><b>💠</b>보물<i class="dot" id="dTreas"></i></button><button data-p="pgQuest"><b>📜</b>퀘스트<i class="dot" id="dQuest"></i></button></div>
@@ -232,7 +232,28 @@
     coin: () => { if (thr('cn', 60)) tone(1600 + Math.random() * 300, .05, 'sine', .025, 400); },
     tap: () => tone(1000, .04, 'sine', .04),
   };
-  window.addEventListener('pointerdown', () => { try { ac().resume(); } catch(e){} }, { once: false, passive: true });
+  window.addEventListener('pointerdown', () => { try { ac().resume(); BGM.kick(); } catch(e){} }, { once: false, passive: true });
+  // ---------- BGM (procedural chiptune) ----------
+  const NOTE = n => 440 * Math.pow(2, (n - 69) / 12);
+  const SONGS = {
+    home: { bpm: 92, prog: [[57, 60, 64], [53, 57, 60], [48, 52, 55], [55, 59, 62]], mel: [76, -1, 74, 72, 69, -1, 72, 74, 72, -1, 69, 67, 69, -1, -1, -1, 72, -1, 74, 76, 79, -1, 76, 74, 74, -1, 72, 71, 67, -1, -1, -1], drums: false, vol: 0.5 },
+    battle: { bpm: 138, prog: [[57, 60, 64], [53, 57, 60], [55, 59, 62], [52, 56, 59]], mel: [69, 72, 76, 72, 74, -1, 72, 71, 72, 76, 79, 76, 77, -1, 76, 74, 74, 72, 71, 72, 74, -1, 76, -1, 68, 71, 74, 76, 75, -1, 76, -1], drums: true, vol: 1 },
+  };
+  const BGM = { on: true, song: null, step: 0, t: 0, timer: null, gain: null,
+    play(name){ if (this.song === name) return; this.song = name; this.step = 0; this.t = AC ? AC.currentTime + 0.05 : 0; this.kick(); },
+    kick(){ if (!this.on || !this.song || this.timer) return; try { const A = ac(); if (A.state !== 'running') return; this.gain = this.gain || (() => { const g = A.createGain(); g.gain.value = 0.55; g.connect(A.destination); return g; })(); this.t = A.currentTime + 0.1; this.timer = setInterval(() => this.tick(), 60); } catch(e){} },
+    stop(){ clearInterval(this.timer); this.timer = null; },
+    n(f, t0, d, type, v){ const A = AC, o = A.createOscillator(), g = A.createGain(); o.type = type; o.frequency.setValueAtTime(f, t0); g.gain.setValueAtTime(0.0001, t0); g.gain.exponentialRampToValueAtTime(v, t0 + 0.01); g.gain.exponentialRampToValueAtTime(0.0001, t0 + d); o.connect(g).connect(this.gain); o.start(t0); o.stop(t0 + d + 0.02); },
+    nz(t0, d, v, hp){ const A = AC, src = A.createBufferSource(), fl = A.createBiquadFilter(), g = A.createGain(); src.buffer = NB; fl.type = hp ? 'highpass' : 'bandpass'; fl.frequency.value = hp ? 7000 : 1800; g.gain.setValueAtTime(v, t0); g.gain.exponentialRampToValueAtTime(0.0001, t0 + d); src.connect(fl).connect(g).connect(this.gain); src.start(t0, Math.random() * 0.5); src.stop(t0 + d + 0.02); },
+    tick(){ if (!this.on || !this.song){ this.stop(); return; } const A = AC; if (!A || A.state !== 'running') return; const S = SONGS[this.song], st = 60 / S.bpm / 2, V = S.vol; if (this.t < A.currentTime - 0.3) this.t = A.currentTime + 0.05;
+      while (this.t < A.currentTime + 0.25){ const i = this.step, bar = Math.floor(i / 8) % 4, ch = S.prog[bar], e = i % 8, t0 = this.t;
+        if (e % 2 === 0) this.n(NOTE(ch[0] - 24), t0, st * 1.8, 'triangle', 0.09 * V + 0.04);
+        this.n(NOTE(ch[e % 3] + 12), t0, st * 0.7, 'square', 0.012 * (0.6 + V));
+        const m = S.mel[i % 32]; if (m > 0) this.n(NOTE(m), t0, st * 1.6, 'triangle', 0.05);
+        if (S.drums){ this.nz(t0, 0.03, 0.025, true); if (e === 0 || e === 4){ const o = A.createOscillator(), g = A.createGain(); o.frequency.setValueAtTime(140, t0); o.frequency.exponentialRampToValueAtTime(40, t0 + 0.12); g.gain.setValueAtTime(0.18, t0); g.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.14); o.connect(g).connect(this.gain); o.start(t0); o.stop(t0 + 0.16); }
+          if (e === 2 || e === 6) this.nz(t0, 0.12, 0.07, false); }
+        this.step++; this.t += st; } }
+  };
   const pick = a => a[Math.floor(Math.random() * a.length)];
 
   // ---------- state ----------
@@ -496,11 +517,17 @@
   function drawMob(m, x, y){
     const h = m.boss ? 48 : m.mbo ? 36 : 27, goingLeft = y >= FL[m.f || 0].P.y1 - 0.5; m.flip = !goingLeft;
     const wf = ART['mwalk' + (Math.floor(m.d * 0.16 + m.id * 4) % 4) + '_' + m.type], moving = !(m.stun > 0);
-    const ph = m.d * 0.22 + (m.id * 10), hop = wf ? (moving ? Math.abs(Math.sin(ph * 2)) * 0.8 : 0) : Math.abs(Math.sin(ph)) * (m.boss ? 2 : 3), tilt = wf ? 0 : Math.sin(ph) * 0.12, kb = (m.kb || 0) * 4;
+    const ph = m.d * 0.22 + (m.id * 10), hop = wf ? (moving ? Math.abs(Math.sin(ph * 2)) * 0.8 : 0) : 0, tilt = wf ? 0 : Math.sin(ph) * 0.04, kb = (m.kb || 0) * 4;
+    let asx = 1, asy = 1, aoy = 0, skew = 0; if (!wf && moving){ const t = m.type, q = G.t * (m.boss ? 4 : 7) + m.id * 10;
+      if (/slime/.test(t)){ const v = Math.sin(q); aoy = -Math.max(0, v) * (m.boss ? 5 : 7); asx = 1 + (v < 0 ? -v * 0.16 : -v * 0.06); asy = 1 / asx; }
+      else if (t === 'icebat'){ aoy = -10 + Math.sin(q * 0.6) * 3; asy = 1 + Math.sin(q * 2.2) * 0.14; asx = 1 - Math.sin(q * 2.2) * 0.05; }
+      else if (t === 'imp'){ aoy = -4 + Math.sin(q * 0.8) * 2.5; asy = 1 + Math.sin(q * 1.6) * 0.04; }
+      else if (t === 'sandworm'){ skew = Math.sin(q * 0.7) * 0.18; asy = 1 + Math.sin(q * 0.7 + 1) * 0.05; }
+      else { aoy = -Math.abs(Math.sin(q * 0.8)) * 3; skew = Math.sin(q * 0.8) * 0.06; } }
     ctx.fillStyle = 'rgba(0,0,0,.28)'; ctx.beginPath(); ctx.ellipse(x, y + 5, h * 0.36 * (1 - hop * 0.04), 3.5, 0, 0, 6.28); ctx.fill();
     const im = (moving && wf) || ART[(m.boss ? 'boss_' : 'mob_') + m.type];
     if (im){ const w = h * im.width / im.height, sq = 1 + (m.kb || 0) * 0.15;
-      ctx.save(); ctx.translate(x + (m.flip ? -kb : kb), y + 6 - hop); ctx.rotate(tilt); if (m.flip) ctx.scale(-1, 1); ctx.scale(sq, 1 / sq);
+      ctx.save(); ctx.translate(x + (m.flip ? -kb : kb), y + 6 - hop); ctx.rotate(tilt); if (m.flip) ctx.scale(-1, 1); ctx.scale(sq * asx, asy / sq); if (skew) ctx.transform(1, 0, skew, 1, 0, 0); if (aoy) ctx.translate(0, aoy / asy);
       if (m.slowT > 0){ ctx.filter = 'hue-rotate(160deg) saturate(1.4) brightness(1.1)'; }
       ctx.drawImage(im, -w / 2, -h, w, h); ctx.filter = 'none';
       if (m.hit > 0){ ctx.globalAlpha = Math.min(1, m.hit * 8) * 0.85; ctx.drawImage(whiteOf(im), -w / 2, -h, w, h); ctx.globalAlpha = 1; }
@@ -660,7 +687,7 @@
   const $ = id => document.getElementById(id), home = $('home');
   function toast(t){ const e = $('toast'); e.textContent = t; e.style.opacity = 1; clearTimeout(toast.h); toast.h = setTimeout(() => e.style.opacity = 0, 1400); }
   let lastKind = 'normal';
-  function startGame(kind){ if (typeof kind !== 'string') kind = 'normal'; if (kind !== 'normal' && kind === lastKind && G && G.over && G.kind === kind){ M.tk = M.tk || {}; if ((M.tk[kind] || 0) >= 3){ toast('오늘 입장권을 다 썼어요'); return; } M.tk[kind] = (M.tk[kind] || 0) + 1; save(); } lastKind = kind; home.classList.add('hide'); $('over').classList.add('hide'); newGame(kind); running = true; try { AC = AC || new (window.AudioContext || window.webkitAudioContext)(); AC.resume(); } catch(e){} }
+  function startGame(kind){ if (typeof kind !== 'string') kind = 'normal'; if (kind !== 'normal' && kind === lastKind && G && G.over && G.kind === kind){ M.tk = M.tk || {}; if ((M.tk[kind] || 0) >= 3){ toast('오늘 입장권을 다 썼어요'); return; } M.tk[kind] = (M.tk[kind] || 0) + 1; save(); } lastKind = kind; home.classList.add('hide'); $('over').classList.add('hide'); newGame(kind); running = true; BGM.play('battle'); try { AC = AC || new (window.AudioContext || window.webkitAudioContext)(); AC.resume(); } catch(e){} }
   function goHome(){ running = false; $('over').classList.add('hide'); home.classList.remove('hide'); renderHome(); }
   $('go').onclick = () => startGame('normal'); $('again').onclick = () => startGame(lastKind); $('toHome').onclick = goHome;
   document.querySelectorAll('.tabs button').forEach(b => b.onclick = () => { document.querySelectorAll('.tabs button').forEach(x => x.classList.toggle('on', x === b)); document.querySelectorAll('.hpage').forEach(p => p.classList.toggle('on', p.id === b.dataset.p)); renderHome(); });
@@ -703,12 +730,16 @@
       ${on ? `<div class="row"><div style="font-size:26px">💎</div><div class="t">이용권 일일 보석<small>매일 💎30</small></div><button class="sbtn" id="bPassGem" ${M.passGem === today() ? 'disabled' : ''}>${M.passGem === today() ? '받음' : '받기'}</button></div>` : ''}
       <div class="row"><div style="font-size:30px">⏩</div><div class="t">영구 2배속<small>${M.perm2x ? '<b style="color:#8cf08c">보유 중</b>' : '한 번 사면 평생 2배속'}</small></div><button class="sbtn" data-b="td_speed" ${M.perm2x ? 'disabled' : ''} style="background:linear-gradient(#c9a8ff,#7a4ad8);color:#fff">${M.perm2x ? '보유' : priceOf('td_speed')}</button></div>
       <button class="btn2" id="bRestore" style="font-size:13px;padding:8px 0">🔄 구매 복원</button>`;
-    $('shopPay').innerHTML = IAPX.filter(q => q.id.startsWith('td_gem')).map(q => `<div class="row"><div style="font-size:26px">${q.e}</div><div class="t">${q.name}<small>${q.desc}</small></div><button class="sbtn" data-b="${q.id}">${q.price}</button></div>`).join('');
+    $('shopPay').innerHTML = IAPX.filter(q => q.id.startsWith('td_gem')).map(q => `<div class="row"><div style="font-size:26px">${q.e}</div><div class="t">${q.name}<small>${q.desc}</small></div><button class="sbtn" data-b="${q.id}">${q.price}</button></div>`).join('') + `<div class="sub" style="margin-top:8px;font-size:11px"><a href="prob.html" target="_blank" style="color:#9a92c0">확률 정보</a> · <a href="terms.html" target="_blank" style="color:#9a92c0">이용약관</a> · <a href="privacy.html" target="_blank" style="color:#9a92c0">개인정보처리방침</a></div>`;
     document.querySelectorAll('#pgShop [data-b]').forEach(b => b.onclick = () => buy(IAPX.find(q => q.id === b.dataset.b)));
     $('bRestore').onclick = restore;
     if ($('bPassGem')) $('bPassGem').onclick = () => { if (!passOn() || M.passGem === today()) return; M.passGem = today(); M.gem += 30; save(); toast('💎 +30'); renderHome(); };
   }
-  function renderHome(){ dayRoll(); renderShop();
+  function audioUI(){ $('hBgm').style.opacity = BGM.on ? 1 : 0.4; $('hSfx').style.opacity = MUTE ? 0.4 : 1; }
+  BGM.on = M.bgm !== false; MUTE = M.sfx === false;
+  $('hBgm').onclick = () => { BGM.on = !BGM.on; M.bgm = BGM.on; save(); if (BGM.on) BGM.kick(); else BGM.stop(); audioUI(); };
+  $('hSfx').onclick = () => { MUTE = !MUTE; M.sfx = !MUTE; save(); audioUI(); };
+  function renderHome(){ dayRoll(); renderShop(); audioUI(); BGM.play('home');
     $('hGold').textContent = M.gold.toLocaleString(); $('hGem').textContent = M.gem; $('hBest').textContent = '🏆 ' + M.best + '웨이브';
     const top = [...UNITS].filter(u => M.seen[u.id]).sort((a, b) => b.r - a.r || (M.lv[b.id] || 0) - (M.lv[a.id] || 0));
     const hero = top[0] || UB('drag5'), sides = top.filter(u => u !== hero).slice(0, 2); $('hHero').src = uimg(hero.id);
@@ -744,6 +775,7 @@
     $('xmodes').querySelectorAll('button').forEach(b => b.onclick = () => { const k = b.dataset.x; M.tk = M.tk || {}; if ((M.tk[k] || 0) >= 3){ toast('오늘 입장권을 다 썼어요 (내일 충전)'); return; } M.tk[k] = (M.tk[k] || 0) + 1; save(); startGame(k); });
     // treasures
     $('trGrid').innerHTML = TREAS.map(t => { const lv = TL(t.id); return `<div class="tc ${lv ? '' : 'lock'}"><div class="e">${t.e}</div><div class="n">${t.n} ${lv ? 'Lv.' + lv : ''}</div><div class="d">${t.d(Math.max(1, lv))}</div></div>`; }).join('');
+    { const pool = TREAS.filter(t => TL(t.id) < TR_MAX); $('trOdds').innerHTML = pool.length ? `획득 확률: 최대 레벨이 아닌 보물 ${pool.length}종 중 균등 · 각 ${(100 / pool.length).toFixed(2)}% · <a href="prob.html" target="_blank" style="color:#9a92c0">확률 정보</a>` : '모든 보물이 최대 레벨이에요'; }
     $('bTr').disabled = M.gem < TR_COST; $('bTr10').disabled = M.gem < 270;
     $('dTreas').style.display = M.gem >= TR_COST ? 'block' : 'none';
     // dots
