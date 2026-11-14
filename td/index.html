@@ -2,6 +2,21 @@
 <html lang="ko"><head><meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <title>운빨 수호대: 랜덤 디펜스</title>
+<script type="module">
+  window.__osdk = (async () => {
+    try {
+      const m = await Promise.race([import('https://h5sdk.onestore.net/lib/v1.1.0/onestore-h5-sdk.min.js'), new Promise((_, r) => setTimeout(() => r('timeout'), 8000))]);
+      const sdk = m.createSDK();
+      sdk.on('pause', () => window.dispatchEvent(new Event('osdk-pause')));
+      sdk.on('resume', () => window.dispatchEvent(new Event('osdk-resume')));
+      try { sdk.setLoadingProgress(10); } catch (e) {}
+      await sdk.initializeAsync();
+      try { sdk.setLoadingProgress(100); } catch (e) {}
+      try { await sdk.startGameAsync(); } catch (e) {}
+      window.__osdkSdk = sdk; return sdk;
+    } catch (e) { return null; }
+  })();
+</script>
 <style>
   html,body{margin:0;height:100%;background:#120f20;overflow:hidden;font-family:-apple-system,"Apple SD Gothic Neo","Noto Sans KR",sans-serif;color:#fff;touch-action:none;-webkit-user-select:none;user-select:none}
   #wrap{position:relative;width:100%;height:100%;max-width:480px;margin:0 auto}
@@ -78,7 +93,7 @@
   </div>
   <div class="hpage" id="pgUnits"><div class="card"><h3>수호자 강화</h3><div class="sub" style="text-align:left;margin-bottom:8px">골드로 영구 강화 · 레벨당 공격력 +12%</div><div class="ugrid" id="uGrid"></div></div>
     <div class="card"><h3>✨ 신화 조합식</h3><div id="recList"></div></div></div>
-  <div class="hpage" id="pgShop"><div class="card"><h3>무료 보급</h3><div id="shopFree"></div></div><div class="card"><h3>보석 교환</h3><div id="shopGem"></div></div></div>
+  <div class="hpage" id="pgShop"><div class="card" style="border-color:#ffd447"><h3>👑 프리미엄</h3><div id="shopPrem"></div></div><div class="card"><h3>💎 보석 상점</h3><div id="shopPay"></div></div><div class="card"><h3>무료 보급</h3><div id="shopFree"></div></div><div class="card"><h3>보석 교환</h3><div id="shopGem"></div></div></div>
   <div class="hpage" id="pgTreas"><div class="card"><h3>💠 보물 뽑기</h3><div class="sub" style="text-align:left">보물은 모든 전투에 효과가 적용돼요. 같은 보물이 또 나오면 레벨업! (최대 Lv.10)</div>
     <button class="bigbtn" id="bTr" style="width:100%;font-size:18px;animation:none">💎 30 · 보물 1회 뽑기</button><button class="btn2" id="bTr10">💎 270 · 10회 뽑기 (10% 할인)</button></div>
     <div class="card"><h3>내 보물</h3><div class="tgrid" id="trGrid"></div></div></div>
@@ -511,7 +526,7 @@
     btn(LW - 150, by + 14, 126, 80, can ? ['#ffe27a', '#ffbe2e'] : ['#5a5470', '#3a3450'], () => summon(), [`소환`, `🪙 ${G.cost}`], can ? '#3a2206' : '#aaa');
     // trash
     ctx.fillStyle = G.drag ? 'rgba(255,80,80,.35)' : 'rgba(255,255,255,.06)'; rr(26, by + 78, 110, 24, 8); ctx.fill(); ctx.fillStyle = '#ffb0b0'; ctx.font = '800 12px sans-serif'; ctx.textAlign = 'center'; ctx.fillText('🗑️ 판매', 81, by + 95);
-    btn(142, by + 78, 44, 24, ['#2a2446', '#2a2446'], () => { G.speed = G.speed === 1 ? 2 : 1; }, [`▶x${G.speed}`, ''], '#ffd447', 12, 0);
+    { const ok = fastOK(); btn(142, by + 78, 44, 24, G.speed === 2 ? ['#ffd447', '#ffb21e'] : ['#2a2446', '#2a2446'], () => { if (!ok){ G.panel = 'spd'; return; } G.speed = G.speed === 1 ? 2 : 1; }, [ok ? `▶x${G.speed}` : '🔒x2', ''], G.speed === 2 ? '#3a2206' : '#ffd447', 12, 0); }
     const AB = [ ['⬆️ 강화', 'up', '#3a6ad8'], ['🎯 미션', 'mis', '#d86a3a'], ['📖 신화', 'myth', '#c03a8a'] ];
     AB.forEach(([t, k, c], j) => { const x = 18 + j * 78; const rdy = k === 'myth' && recipeReady(); btn(x, 470, 72, 28, rdy ? ['#ff9ab0', '#e0405e'] : [c, '#1a1630'], rdy ? makeMyth : () => { G.panel = G.panel === k ? null : k; G.sel = -1; }, [rdy ? '✨ 조합!' : t, ''], '#fff', 12, 0);
       if (rdy){ ctx.strokeStyle = `rgba(255,255,255,${0.5 + 0.5 * Math.sin(G.t * 6)})`; ctx.lineWidth = 2; rr(x, 470, 72, 28, 11); ctx.stroke(); }
@@ -524,6 +539,7 @@
   function card(x, y, w, h, title){ btns.push({ x: 0, y: 0, w: LW, h: LH, fn: () => { G.panel = null; } }); btns.push({ x, y, w, h, fn: () => {} });
     ctx.fillStyle = 'rgba(0,0,0,.45)'; ctx.fillRect(0, 0, LW, LH); ctx.fillStyle = 'rgba(24,20,44,.97)'; rr(x, y, w, h, 16); ctx.fill(); ctx.strokeStyle = '#4a3f7a'; ctx.lineWidth = 2; ctx.stroke();
     ctx.fillStyle = '#ffd447'; ctx.font = '900 16px sans-serif'; ctx.textAlign = 'left'; ctx.fillText(title, x + 14, y + 26); btn(x + w - 36, y + 8, 26, 26, ['#3a3456', '#3a3456'], () => { G.panel = null; }, ['✕', ''], '#fff', 13, 0); }
+  let y0 = 0;
   function drawPanel(){ const P2 = G.panel; if (!P2) return; const x = 20, w = LW - 40;
     if (P2 === 'up'){ card(x, 150, w, 300, '수호자 강화');
       UPS.forEach((u, k) => { const y = 192 + k * 62, l = G.up[k], c = u.cost(l), mx = u.max && l >= u.max, ok = !mx && (u.cur === 's' ? G.silver >= c : G.luck >= c);
@@ -535,6 +551,12 @@
         const im = ART['mob_' + m.type]; if (im){ const h = 44, ww = h * im.width / im.height; ctx.drawImage(im, x + 20, y + 7, ww, h); }
         ctx.textAlign = 'left'; ctx.fillStyle = '#fff'; ctx.font = '900 14px sans-serif'; ctx.fillText(m.n, x + 74, y + 24); ctx.fillStyle = '#8cf08c'; ctx.font = '800 11px sans-serif'; ctx.fillText('보상 ' + m.rw, x + 74, y + 43);
         btn(x + w - 96, y + 12, 76, 34, ok ? ['#ff9a5a', '#d8502a'] : ['#3a3450', '#2a2440'], () => mission(k), [ok ? '도전' : G.wave < 1 ? '대기' : Math.ceil(cd) + '초', ''], ok ? '#fff' : '#888', 14, 0); }); }
+    if (P2 === 'spd'){ card(x, 190, w, 230, '⏩ 2배속');
+      ctx.textAlign = 'left'; ctx.fillStyle = '#c8c0ea'; ctx.font = '700 12px sans-serif'; ctx.fillText('2배속으로 빠르게 웨이브를 넘겨요!', x + 16, y0 = 238);
+      const rows = [ [canReward() ? '📺 광고 보고 이번 판만 2배속' : '📺 광고 2배속 (준비 중)', canReward() ? ['#6ee0ff', '#2a8ad8'] : ['#3a3450', '#2a2440'], async () => { if (await showRewarded()){ G.adFast = true; G.speed = 2; G.panel = null; } }],
+        [`👑 30일 이용권 ${priceOf('td_pass30')}`, ['#ffe27a', '#ffb21e'], () => { G.panel = null; buy(IAPX.find(q => q.id === 'td_pass30')); }],
+        [`⏩ 영구 2배속 ${priceOf('td_speed')}`, ['#b98cff', '#7a4ad8'], () => { G.panel = null; buy(IAPX.find(q => q.id === 'td_speed')); }] ];
+      rows.forEach(([t, cols, fn], k) => btn(x + 14, 252 + k * 52, w - 28, 42, cols, fn, [t, ''], k === 1 ? '#3a2206' : '#fff', 14, 0)); }
     if (P2 === 'myth'){ card(x, 140, w, 330, '신화 조합식');
       RECIPES.forEach((rc, k) => { const y = 180 + k * 94, o = UB(rc.out); ctx.fillStyle = 'rgba(255,120,160,.08)'; rr(x + 10, y, w - 20, 86, 12); ctx.fill();
         const im = ART['u_' + o.id]; if (im){ const h = 62, ww = h * im.width / im.height; ctx.drawImage(im, x + 46 - ww / 2, y + 6, ww, h); }
@@ -582,7 +604,50 @@
   $('go').onclick = () => startGame('normal'); $('again').onclick = () => startGame(lastKind); $('toHome').onclick = goHome;
   document.querySelectorAll('.tabs button').forEach(b => b.onclick = () => { document.querySelectorAll('.tabs button').forEach(x => x.classList.toggle('on', x === b)); document.querySelectorAll('.hpage').forEach(p => p.classList.toggle('on', p.id === b.dataset.p)); renderHome(); });
   const uimg = id => `art/u_${id}.webp`;
-  function renderHome(){ dayRoll();
+  // ---------- time (server Date header) + premium ----------
+  const DAY = 86400000; M.toff = M.toff || 0; M.tsync = M.tsync || 0; M.last = M.last || 0; M.passUntil = M.passUntil || 0;
+  let timeOK = false, rolled = false;
+  const nowT = () => Date.now() + M.toff;
+  async function syncTime(){ try { const r = await fetch(location.href.split('#')[0].split('?')[0] + '?t=' + Date.now(), { method: 'HEAD', cache: 'no-store' }); const d = Date.parse(r.headers.get('Date')); if (!isNaN(d)){ M.toff = d - Date.now(); M.tsync = d; timeOK = true; rolled = false; M.last = Math.max(M.last, d); save(); renderHome(); return true; } } catch(e){} return false; }
+  function checkClock(){ const n = nowT(); if (M.last && n < M.last - 10 * 60000) rolled = true; if (!rolled) M.last = Math.max(M.last, n); }
+  const passOn = () => !rolled && M.passUntil > nowT() && (timeOK || nowT() - M.tsync < 3 * DAY);
+  const fastOK = () => !!(M.perm2x || passOn() || (G && G.adFast));
+  const passDays = () => Math.max(0, Math.ceil((M.passUntil - nowT()) / DAY));
+  syncTime(); setInterval(syncTime, 10 * 60000); setInterval(() => { checkClock(); save(); }, 30000); checkClock();
+  const AD_IDS = { interstitial: '', rewarded: '' };   // ← ONE store placement IDs
+  const canReward = () => passOn() || !!(window.__osdkSdk && window.__osdkSdk.ads && AD_IDS.rewarded);
+  async function showRewarded(){ if (passOn()) return true; const sdk = window.__osdkSdk; if (!canReward()){ toast('광고를 불러올 수 없어요'); return false; }
+    try { const res = await sdk.ads.showRewardedAsync({ placementId: AD_IDS.rewarded, requestId: 'r' + Date.now() + Math.random().toString(36).slice(2, 8) }); if (res && res.status === 'rewarded') return true; toast('광고를 끝까지 봐야 보상을 받아요'); return false; } catch(e){ toast('광고를 불러올 수 없어요'); return false; } }
+  const IAPX = [
+    { id: 'td_pass30', e: '👑', name: '30일 프리미엄 이용권', price: '4,900원', desc: '30일 동안 2배속 무제한 · 광고 없이 보상 · 매일 💎30', give(p){ const base = Math.max(M.passUntil, nowT()); M.passUntil = base + 30 * DAY; } },
+    { id: 'td_speed', e: '⏩', name: '영구 2배속', price: '9,900원', once: true, desc: '한 번 사면 평생 2배속 무제한', give(){ M.perm2x = true; } },
+    { id: 'td_gem_s', e: '💎', name: '보석 주머니', price: '1,100원', desc: '보석 💎60', give(){ M.gem += 60; } },
+    { id: 'td_gem_m', e: '💎', name: '보석 상자', price: '5,500원', desc: '보석 💎330 (+10%)', give(){ M.gem += 330; } },
+    { id: 'td_gem_l', e: '💎', name: '보석 보물상자', price: '11,000원', desc: '보석 💎720 (+20%)', give(){ M.gem += 720; } },
+  ];
+  const priceOf = id => (IAPX.find(q => q.id === id) || {}).price || '';
+  (async () => { const sdk = await window.__osdk; if (!sdk || !sdk.iap) return; try { const list = await sdk.iap.getProductDetailsAsync(IAPX.map(q => q.id)); (list || []).forEach(d => { const q = IAPX.find(x => x.id === d.productId); if (q && d.price) q.price = d.price; }); renderHome(); } catch(e){} })();
+  async function buy(q){ const sdk = window.__osdkSdk; if (!sdk || !sdk.iap){ toast('결제는 원스토어 앱에서만 할 수 있어요'); return; }
+    if (q.id === 'td_pass30') await syncTime();
+    try { const r = await sdk.iap.purchase({ productId: q.id, productName: q.name }); grantX(q, false, r); }
+    catch(e){ const why = String((e && (e.code || e.reason || e.message)) || e); if (why.includes('already_owned') && q.once){ grantX(q, true); return; } if (why.includes('cancel')) return; toast('결제가 완료되지 않았어요'); } }
+  function grantX(q, restored, r){ M.iap = M.iap || {}; if (q.once && M.iap[q.id] && !restored) return; if (!(restored && M.iap[q.id])) q.give(r); M.iap[q.id] = true; save(); SFX.myth(); toast(restored ? '복원 완료!' : q.name + ' 구매 완료!'); renderHome(); }
+  async function restore(){ const sdk = window.__osdkSdk; if (!sdk || !sdk.iap){ toast('원스토어 앱에서만 복원할 수 있어요'); return; } await syncTime();
+    try { const fn = sdk.iap.getPurchasesAsync || sdk.iap.getPurchases; if (!fn){ toast('영구 상품은 다시 구매 버튼을 누르면 무료로 복원돼요'); return; } const list = await fn.call(sdk.iap) || []; let n = 0;
+      list.forEach(it => { const id = it.productId; if (id === 'td_speed'){ M.perm2x = true; n++; } if (id === 'td_pass30'){ const t = Number(it.purchaseTime || it.purchaseTimeMillis || 0); if (t && t + 30 * DAY > M.passUntil){ M.passUntil = t + 30 * DAY; n++; } } });
+      save(); renderHome(); toast(n ? '구매 내역을 복원했어요' : '복원할 구매 내역이 없어요'); } catch(e){ toast('복원하지 못했어요. 잠시 후 다시 해주세요'); } }
+  window.__restore = restore;
+  function renderShop(){ const on = passOn(), ok = !rolled;
+    $('shopPrem').innerHTML = `<div class="row"><div style="font-size:30px">👑</div><div class="t">30일 프리미엄 이용권<small>${on ? `<b style="color:#8cf08c">이용 중 · ${passDays()}일 남음</b>` : !ok ? '<b style="color:#ff8a8a">기기 시간이 이상해요 · 인터넷 연결 후 다시 확인돼요</b>' : '2배속 무제한 · 광고 없이 보상 · 매일 💎30'}</small></div><button class="sbtn" data-b="td_pass30" style="background:linear-gradient(#ffe27a,#ffb21e);color:#3a2206">${on ? '연장 ' : ''}${priceOf('td_pass30')}</button></div>
+      ${on ? `<div class="row"><div style="font-size:26px">💎</div><div class="t">이용권 일일 보석<small>매일 💎30</small></div><button class="sbtn" id="bPassGem" ${M.passGem === today() ? 'disabled' : ''}>${M.passGem === today() ? '받음' : '받기'}</button></div>` : ''}
+      <div class="row"><div style="font-size:30px">⏩</div><div class="t">영구 2배속<small>${M.perm2x ? '<b style="color:#8cf08c">보유 중</b>' : '한 번 사면 평생 2배속'}</small></div><button class="sbtn" data-b="td_speed" ${M.perm2x ? 'disabled' : ''} style="background:linear-gradient(#c9a8ff,#7a4ad8);color:#fff">${M.perm2x ? '보유' : priceOf('td_speed')}</button></div>
+      <button class="btn2" id="bRestore" style="font-size:13px;padding:8px 0">🔄 구매 복원</button>`;
+    $('shopPay').innerHTML = IAPX.filter(q => q.id.startsWith('td_gem')).map(q => `<div class="row"><div style="font-size:26px">${q.e}</div><div class="t">${q.name}<small>${q.desc}</small></div><button class="sbtn" data-b="${q.id}">${q.price}</button></div>`).join('');
+    document.querySelectorAll('#pgShop [data-b]').forEach(b => b.onclick = () => buy(IAPX.find(q => q.id === b.dataset.b)));
+    $('bRestore').onclick = restore;
+    if ($('bPassGem')) $('bPassGem').onclick = () => { if (!passOn() || M.passGem === today()) return; M.passGem = today(); M.gem += 30; save(); toast('💎 +30'); renderHome(); };
+  }
+  function renderHome(){ dayRoll(); renderShop();
     $('hGold').textContent = M.gold.toLocaleString(); $('hGem').textContent = M.gem; $('hBest').textContent = '🏆 ' + M.best + '웨이브';
     const top = [...UNITS].filter(u => M.seen[u.id]).sort((a, b) => b.r - a.r || (M.lv[b.id] || 0) - (M.lv[a.id] || 0));
     const hero = top[0] || UB('drag5'), sides = top.filter(u => u !== hero).slice(0, 2); $('hHero').src = uimg(hero.id);
@@ -621,7 +686,7 @@
     $('bTr').disabled = M.gem < TR_COST; $('bTr10').disabled = M.gem < 270;
     $('dTreas').style.display = M.gem >= TR_COST ? 'block' : 'none';
     // dots
-    $('dShop').style.display = freeOk ? 'block' : 'none'; $('dQuest').style.display = attOk || QUESTS.some(q => (M.q[q.id] || 0) >= q.goal && !M.qc[q.id]) ? 'block' : 'none';
+    $('dShop').style.display = freeOk || (passOn() && M.passGem !== today()) ? 'block' : 'none'; $('dQuest').style.display = attOk || QUESTS.some(q => (M.q[q.id] || 0) >= q.goal && !M.qc[q.id]) ? 'block' : 'none';
     $('dUnits').style.display = UNITS.some(u => M.seen[u.id] && M.gold >= upCost(u)) ? 'block' : 'none';
   }
   function pullTr(n, cost){ if (M.gem < cost) return; const pool = TREAS.filter(t => TL(t.id) < TR_MAX); if (!pool.length){ toast('모든 보물이 최대 레벨이에요!'); return; }
