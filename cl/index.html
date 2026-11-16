@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="ko"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>크로노스 로스트: 타임리프 액션 RPG</title>
+<script type="module">
+  window.__osdk = (async () => {
+    try {
+      const m = await Promise.race([import('https://h5sdk.onestore.net/lib/v1.1.0/onestore-h5-sdk.min.js'), new Promise((_, r) => setTimeout(() => r('timeout'), 8000))]);
+      const sdk = m.createSDK();
+      sdk.on('pause', () => window.dispatchEvent(new Event('osdk-pause')));
+      sdk.on('resume', () => window.dispatchEvent(new Event('osdk-resume')));
+      try { sdk.setLoadingProgress(10); } catch (e) {}
+      await sdk.initializeAsync();
+      try { sdk.setLoadingProgress(100); } catch (e) {}
+      try { await sdk.startGameAsync(); } catch (e) {}
+      window.__osdkSdk = sdk; return sdk;
+    } catch (e) { return null; }
+  })();
+</script>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:#05060c;overflow:hidden;font-family:-apple-system,"Apple SD Gothic Neo","Noto Sans KR",sans-serif;color:#e8f4ff;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
+#stage{position:absolute;left:0;top:0;width:640px;height:360px;transform-origin:0 0;overflow:hidden;background:#070a14}
+#cv{position:absolute;left:0;top:0;width:640px;height:360px}
+.scr{position:absolute;inset:0;display:none}
+.scr.on{display:block}
+button{font-family:inherit;cursor:pointer}
+/* ---------- lobby ---------- */
+#lobby{background:#0a1020 url(art/bg_lobby.webp) center/cover}
+#lobby .tint{position:absolute;inset:0;pointer-events:none}
+#lobbyChar{position:absolute;left:160px;top:-6px;height:380px;width:auto;filter:drop-shadow(0 0 18px rgba(60,220,255,.35));transition:transform .25s}
+#lobbyChar.tap{transform:scale(1.03) translateY(-4px)}
+.topbar{position:absolute;left:0;right:0;top:0;height:30px;display:flex;align-items:center;gap:6px;padding:0 8px;background:linear-gradient(rgba(4,8,18,.92),rgba(4,8,18,.0))}
+.cur{display:flex;align-items:center;gap:4px;background:rgba(10,20,40,.8);border:1px solid #2a4a70;border-radius:12px;padding:2px 9px 2px 6px;font-size:11px;font-weight:800;white-space:nowrap}
+.cur i{font-style:normal}
+.lvl{font-size:11px;font-weight:900;color:#7fe7ff;margin-right:auto;display:flex;align-items:center;gap:6px}
+.lvl b{background:linear-gradient(90deg,#26e0ff,#7a5cff);-webkit-background-clip:text;color:transparent;font-size:13px;letter-spacing:.5px}
+.lcol{position:absolute;left:8px;top:38px;display:flex;flex-direction:column;gap:7px}
+.lbtn{position:relative;width:62px;height:50px;border-radius:10px;border:1px solid #2c5a86;background:linear-gradient(160deg,rgba(18,40,70,.92),rgba(8,16,32,.92));color:#cfeaff;font-size:10px;font-weight:800;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;box-shadow:inset 0 0 10px rgba(40,200,255,.12)}
+.lbtn .e{font-size:19px;line-height:1}
+.dot{position:absolute;right:-3px;top:-3px;width:11px;height:11px;border-radius:50%;background:#ff3b5c;border:2px solid #0a1020;display:none}
+.dot.on{display:block}
+.rcol{position:absolute;right:8px;top:36px;width:200px;display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.rbtn{position:relative;height:56px;border-radius:12px;border:1px solid #2f6aa0;background:linear-gradient(160deg,rgba(16,44,80,.93),rgba(6,14,30,.93));color:#e9f6ff;font-size:12px;font-weight:900;display:flex;flex-direction:column;align-items:flex-start;justify-content:center;padding:0 10px;overflow:hidden;text-align:left}
+.rbtn small{font-size:9px;color:#8fb6d8;font-weight:700}
+.rbtn .e{position:absolute;right:6px;bottom:2px;font-size:26px;opacity:.85}
+.rbtn.big{grid-column:span 2;height:74px;background:linear-gradient(120deg,rgba(255,60,110,.92),rgba(120,40,200,.92));border-color:#ff8ab0;font-size:17px}
+.rbtn.big small{color:#ffe0ea;font-size:10px}
+.rbtn.gacha{background:linear-gradient(120deg,rgba(30,200,255,.85),rgba(60,70,220,.9));border-color:#8ae8ff}
+.rbtn.gacha small{color:#e0f6ff}
+.charName{position:absolute;left:188px;bottom:10px;font-size:11px;font-weight:800;color:#bfe9ff;background:rgba(5,10,22,.7);border:1px solid #2a4a70;border-radius:10px;padding:3px 10px;max-width:260px}
+.speech{position:absolute;left:300px;top:72px;max-width:170px;background:rgba(240,250,255,.95);color:#122;border-radius:12px;padding:7px 10px;font-size:11px;font-weight:700;line-height:1.35;display:none;box-shadow:0 4px 12px rgba(0,0,0,.4)}
+.speech.on{display:block;animation:pop .2s}
+@keyframes pop{from{transform:scale(.7);opacity:0}to{transform:scale(1);opacity:1}}
+.stam{position:absolute;left:8px;bottom:8px;font-size:10px;color:#9cc;background:rgba(5,10,22,.75);border-radius:8px;padding:3px 8px}
+/* ---------- pages ---------- */
+.page{background:linear-gradient(180deg,#0b1428,#060a16)}
+.page .hd{position:absolute;left:0;right:0;top:0;height:34px;display:flex;align-items:center;gap:8px;padding:0 8px;background:rgba(4,8,18,.95);border-bottom:1px solid #1e3a5c;z-index:2}
+.page .hd h2{margin:0;font-size:14px;font-weight:900;color:#9fe8ff;margin-right:auto;letter-spacing:.5px}
+.back{width:30px;height:24px;border-radius:8px;border:1px solid #2c5a86;background:#0f2036;color:#bfe;font-size:14px;font-weight:900}
+.body{position:absolute;left:0;right:0;top:34px;bottom:0;overflow-y:auto;overflow-x:hidden;padding:8px;-webkit-overflow-scrolling:touch;touch-action:pan-y}
+.cta{border:0;border-radius:10px;padding:8px 14px;font-size:13px;font-weight:900;color:#06121e;background:linear-gradient(#7ff2ff,#22b8ff);box-shadow:0 3px 0 #0b6fa8}
+.cta.pink{background:linear-gradient(#ff9cc0,#ff3d7f);color:#fff;box-shadow:0 3px 0 #a3134a}
+.cta.gold{background:linear-gradient(#ffe48a,#ffb422);color:#3a2206;box-shadow:0 3px 0 #a8741e}
+.cta.gray,.cta:disabled{background:linear-gradient(#5a6578,#3b4558);color:#aab;box-shadow:0 3px 0 #252c3a}
+.row{display:flex;align-items:center;gap:8px;background:rgba(14,28,50,.85);border:1px solid #1f3d62;border-radius:10px;padding:7px 9px;margin-bottom:6px}
+.row .t{flex:1;font-size:12px;font-weight:800;line-height:1.3}
+.row .t small{display:block;color:#8fb2d2;font-size:10px;font-weight:600}
+.sub{font-size:10px;color:#8fa6c4}
+/* agents grid */
+.agrid{display:grid;grid-template-columns:repeat(6,1fr);gap:6px}
+.acard{position:relative;aspect-ratio:3/4;border-radius:8px;overflow:hidden;border:2px solid #334;background:#111827}
+.acard img{width:100%;height:100%;object-fit:cover;object-position:50% 12%}
+.acard .nm{position:absolute;left:0;right:0;bottom:0;font-size:9px;font-weight:800;text-align:center;background:linear-gradient(transparent,rgba(0,0,0,.9));padding:8px 2px 2px}
+.acard .rr{position:absolute;left:3px;top:2px;font-size:9px;font-weight:900;text-shadow:0 1px 2px #000}
+.acard .lv{position:absolute;right:3px;top:2px;font-size:9px;font-weight:900;background:rgba(0,0,0,.6);border-radius:5px;padding:0 3px}
+.acard.lock{filter:grayscale(1) brightness(.4)}
+.acard.inp{outline:2px solid #ffd447;outline-offset:-2px}
+.r-SSR{border-color:#ffcf4a!important;box-shadow:0 0 8px rgba(255,200,60,.45)}
+.r-SR{border-color:#c07cff!important}
+.r-R{border-color:#4ab8ff!important}
+.r-N{border-color:#7b8796!important}
+.c-SSR{color:#ffd44a}.c-SR{color:#d39bff}.c-R{color:#6cc6ff}.c-N{color:#aab4c0}.c-UR{color:#ff6b6b}
+.portrait{width:100%;height:100%;object-fit:cover}
+.nophoto{display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:900;color:#fff;width:100%;height:100%}
+/* party */
+.pslots{display:flex;gap:8px;margin-bottom:8px}
+.pslot{flex:1;height:62px;border-radius:10px;border:2px dashed #2c5a86;background:rgba(14,28,50,.7);display:flex;align-items:center;gap:6px;padding:4px;font-size:11px;font-weight:800;overflow:hidden}
+.pslot img{width:52px;height:52px;border-radius:8px;object-fit:cover}
+.pslot.sel{border-style:solid;border-color:#ffd447}
+/* detail */
+#detail{position:absolute;inset:0;background:rgba(3,6,14,.96);z-index:5;display:none}
+#detail.on{display:block}
+#detail .art{position:absolute;left:0;top:0;width:230px;height:360px;object-fit:cover;object-position:50% 0;-webkit-mask-image:linear-gradient(90deg,#000 70%,transparent)}
+#detail .info{position:absolute;left:220px;right:8px;top:8px;bottom:8px;overflow-y:auto;touch-action:pan-y}
+.stat{display:inline-block;background:rgba(20,40,70,.8);border-radius:6px;padding:2px 7px;margin:2px 3px 2px 0;font-size:11px;font-weight:800}
+.awk{display:flex;gap:3px;margin:4px 0}
+.awk span{width:16px;height:16px;border-radius:50%;border:2px solid #555;background:#111}
+.awk span.on{background:radial-gradient(#fff,#ffcf4a);border-color:#ffcf4a;box-shadow:0 0 6px #ffcf4a}
+.skillbox{background:rgba(14,28,50,.85);border:1px solid #1f3d62;border-radius:8px;padding:6px 8px;margin:5px 0;font-size:11px;line-height:1.4}
+.skillbox b{color:#7fe7ff}
+/* gacha */
+.banner{position:relative;height:200px;border-radius:12px;overflow:hidden;border:1px solid #3a6aa0;background:linear-gradient(110deg,#170a2e,#0a2040)}
+.banner img{position:absolute;right:-10px;top:-20px;height:260px}
+.banner .bt{position:absolute;left:12px;top:12px;max-width:330px}
+.banner h3{margin:0;font-size:20px;font-weight:900;background:linear-gradient(90deg,#fff,#7fe7ff);-webkit-background-clip:text;color:transparent}
+.banner p{margin:4px 0;font-size:11px;color:#bcd}
+.tabs{display:flex;gap:6px;margin-bottom:6px}
+.tab{flex:1;border-radius:8px;border:1px solid #2c5a86;background:#0c1a2e;color:#9bc;font-size:11px;font-weight:900;padding:6px 0}
+.tab.on{background:linear-gradient(#1d4f80,#123456);color:#fff;border-color:#7fe7ff}
+#gres{position:absolute;inset:0;background:radial-gradient(#1a2a50,#03060e);z-index:8;display:none}
+#gres.on{display:block}
+#gres .cards{position:absolute;left:10px;right:10px;top:14px;display:grid;grid-template-columns:repeat(5,92px);justify-content:center;gap:8px}
+.gcard{aspect-ratio:3/4;border-radius:8px;position:relative;overflow:hidden;transform:rotateY(90deg);transition:transform .35s;background:#0d1626;border:2px solid #333}
+.gcard.flip{transform:rotateY(0)}
+.gcard img{width:100%;height:100%;object-fit:cover;object-position:50% 10%}
+.gcard .nm{position:absolute;left:0;right:0;bottom:0;font-size:10px;font-weight:900;text-align:center;background:linear-gradient(transparent,rgba(0,0,0,.95));padding:10px 2px 3px}
+.gcard .new{position:absolute;right:3px;top:3px;font-size:9px;font-weight:900;color:#fff;background:#ff3b6b;border-radius:4px;padding:0 4px}
+.gcard.ssr{animation:ssrGlow 1s infinite alternate}
+@keyframes ssrGlow{from{box-shadow:0 0 6px #ffcf4a}to{box-shadow:0 0 22px #ffcf4a}}
+#gflash{position:absolute;inset:0;pointer-events:none;opacity:0;z-index:9}
+/* dialog */
+#dlg{position:absolute;inset:0;z-index:12;display:none;background:rgba(2,4,10,.55)}
+#dlg.on{display:block}
+#dlg img{position:absolute;bottom:0;height:330px;transition:opacity .2s}
+#dlg .box{position:absolute;left:12px;right:12px;bottom:10px;min-height:86px;background:linear-gradient(rgba(6,14,30,.95),rgba(3,8,18,.97));border:1px solid #2f6aa0;border-radius:12px;padding:10px 14px}
+#dlg .who{font-size:13px;font-weight:900;color:#7fe7ff;margin-bottom:4px}
+#dlg .txt{font-size:13px;line-height:1.5;font-weight:600}
+#dlg .skip{position:absolute;right:10px;top:8px;border:1px solid #2c5a86;background:#0c1a2e;color:#9bc;border-radius:8px;font-size:11px;font-weight:800;padding:4px 10px}
+#dlg .nxt{position:absolute;right:14px;bottom:8px;font-size:11px;color:#7fe7ff;animation:blink 1s infinite}
+@keyframes blink{50%{opacity:.2}}
+/* modal / toast */
+#modal{position:absolute;inset:0;z-index:15;background:rgba(2,4,10,.75);display:none;align-items:center;justify-content:center}
+#modal.on{display:flex}
+#modal .mb{width:330px;max-height:330px;overflow-y:auto;background:linear-gradient(#10203a,#0a1426);border:1px solid #3a78b8;border-radius:14px;padding:14px;text-align:center;touch-action:pan-y}
+#modal h3{margin:0 0 8px;font-size:16px;color:#9fe8ff}
+#modal p{margin:6px 0;font-size:12px;line-height:1.5;color:#cde}
+#toast{position:absolute;left:50%;top:44px;transform:translateX(-50%);z-index:20;background:rgba(10,20,40,.95);border:1px solid #3a78b8;border-radius:10px;padding:6px 14px;font-size:12px;font-weight:800;display:none;white-space:nowrap}
+#rot{position:fixed;inset:0;display:none}
+.chs{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+.stg{position:relative;border-radius:10px;border:1px solid #2c5a86;background:rgba(14,28,50,.85);padding:8px;font-size:12px;font-weight:900;min-height:64px}
+.stg small{display:block;font-size:9px;color:#8fb2d2;font-weight:700;margin-top:3px}
+.stg.lock{opacity:.35}
+.stg.boss{border-color:#ff5a7a;background:linear-gradient(rgba(60,10,30,.9),rgba(20,8,20,.9))}
+.stg .star{position:absolute;right:6px;top:5px;font-size:10px;color:#ffd447}
+#loading{position:absolute;inset:0;z-index:30;background:#03050c url(art/key.webp) center/cover;display:flex;align-items:flex-end;justify-content:center}
+#loading .lb{width:60%;margin-bottom:22px;text-align:center;font-size:11px;font-weight:800;color:#bfe9ff;text-shadow:0 1px 3px #000}
+#loading .bar{height:6px;border-radius:3px;background:rgba(255,255,255,.15);overflow:hidden;margin-top:6px}
+#loading .bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,#26e0ff,#ff3d7f);transition:width .2s}
+#loading h1{position:absolute;left:0;right:0;top:26px;text-align:center;margin:0;font-size:34px;font-weight:900;letter-spacing:2px;background:linear-gradient(90deg,#7fe7ff,#fff,#ff7fb0);-webkit-background-clip:text;color:transparent;filter:drop-shadow(0 2px 8px rgba(0,0,0,.8))}
+#loading h1 small{display:block;font-size:12px;letter-spacing:6px;color:#bfe9ff;-webkit-text-fill-color:#bfe9ff}
+#tapStart{position:absolute;bottom:50px;left:0;right:0;text-align:center;font-size:15px;font-weight:900;color:#fff;text-shadow:0 0 10px #26e0ff;animation:blink 1.2s infinite;display:none}
+</style></head>
+<body>
+<div id="stage">
+  <canvas id="cv"></canvas>
+
+  <div id="lobby" class="scr">
+    <div class="tint" id="lobTint"></div>
+    <img id="lobbyChar" src="">
+    <div class="speech" id="speech"></div>
+    <div class="charName" id="charName"></div>
+    <div class="topbar">
+      <div class="lvl">지휘관 <b id="cmdLv">Lv.1</b><span id="cmdName" style="color:#9bc;font-weight:700"></span></div>
+      <div class="cur"><i>⚡</i><span id="vStam">0</span></div>
+      <div class="cur"><i>🪙</i><span id="vCred">0</span></div>
+      <div class="cur"><i>💠</i><span id="vChip">0</span></div>
+      <div class="cur" id="curCry" style="cursor:pointer"><i>💎</i><span id="vCry">0</span><b style="color:#7fe7ff">+</b></div>
+    </div>
+    <div class="lcol">
+      <button class="lbtn" id="bAtt"><span class="e">📅</span>출석<span class="dot" id="dAtt"></span></button>
+      <button class="lbtn" id="bBoot"><span class="e">🎖️</span>부트캠프<span class="dot" id="dBoot"></span></button>
+      <button class="lbtn" id="bMis"><span class="e">📋</span>일일 미션<span class="dot" id="dMis"></span></button>
+      <button class="lbtn" id="bPass"><span class="e">🌀</span>동기화 패스<span class="dot" id="dPass"></span></button>
+      <button class="lbtn" id="bSet"><span class="e">⚙️</span>설정</button>
+    </div>
+    <div class="rcol">
+      <button class="rbtn big" id="bStory">스토리 출격<small id="storyNext">프롤로그</small><span class="e">⚔️</span></button>
+      <button class="rbtn" id="bDaily">일일 던전<small id="dailyLeft">남은 입장 6</small><span class="e">🗝️</span></button>
+      <button class="rbtn" id="bAgents">요원 관리<small>육성 · 편성</small><span class="e">👥</span><span class="dot" id="dAgents"></span></button>
+      <button class="rbtn gacha" id="bGacha">소환<small id="gachaSub">픽업</small><span class="e">✨</span><span class="dot" id="dGacha"></span></button>
+      <button class="rbtn" id="bShop">상점<small id="shopSub">보급품</small><span class="e">🛒</span><span class="dot" id="dShop"></span></button>
+      <button class="rbtn" id="bBase" style="height:42px">요원 숙소<small id="baseSub">호감도 · 파견</small><span class="e" style="font-size:20px">🏠</span><span class="dot" id="dBase"></span></button>
+      <button class="rbtn" id="bAbyss" style="height:42px">균열의 심연<small id="abyssSub">최고 0층</small><span class="e" style="font-size:20px">🌀</span></button>
+    </div>
+    <div class="stam" id="stamT"></div>
+  </div>
+
+  <div id="pgStory" class="scr page"><div class="hd"><button class="back">‹</button><h2>스토리 출격</h2><div class="cur"><i>⚡</i><span class="vStam">0</span></div></div><div class="body" id="storyBody"></div></div>
+  <div id="pgDaily" class="scr page"><div class="hd"><button class="back">‹</button><h2>일일 파밍 던전</h2><div class="cur"><i>⚡</i><span class="vStam">0</span></div></div><div class="body" id="dailyBody"></div></div>
+  <div id="pgAgents" class="scr page"><div class="hd"><button class="back">‹</button><h2>요원 관리</h2><span class="sub" id="ownCnt"></span></div><div class="body" id="agentsBody"></div>
+    <div id="detail"><img class="art" id="dArt"><button class="back" id="dBack" style="position:absolute;left:8px;top:8px;z-index:2">‹</button><div class="info" id="dInfo"></div></div>
+  </div>
+  <div id="pgGacha" class="scr page"><div class="hd"><button class="back">‹</button><h2>소환</h2><div class="cur"><i>🎫</i><span id="vTk">0</span></div><div class="cur"><i>💎</i><span class="vCry">0</span></div></div><div class="body" id="gachaBody"></div>
+    <div id="gres"><div class="cards" id="gcards"></div><div style="position:absolute;left:0;right:0;bottom:14px;text-align:center"><button class="cta" id="gOk">확인</button></div><div id="gflash"></div></div>
+  </div>
+  <div id="pgShop" class="scr page"><div class="hd"><button class="back">‹</button><h2>상점</h2><div class="cur"><i>💎</i><span class="vCry">0</span></div></div><div class="body" id="shopBody"></div></div>
+  <div id="pgList" class="scr page"><div class="hd"><button class="back">‹</button><h2 id="listTitle">미션</h2></div><div class="body" id="listBody"></div></div>
+
+  <div id="dlg"><img id="dlgImg"><div class="box"><div class="who" id="dlgWho"></div><div class="txt" id="dlgTxt"></div><div class="nxt">▼</div></div><button class="skip" id="dlgSkip">건너뛰기 ▶▶</button></div>
+  <div id="modal"><div class="mb" id="mbox"></div></div>
+  <div id="toast"></div>
+  <div id="loading"><h1>CHRONOS LOST<small>크로노스 로스트</small></h1><div id="tapStart">화면을 터치해 시작</div><div class="lb"><span id="loadT">시공간 동기화 중...</span><div class="bar"><i id="loadBar"></i></div></div></div>
+</div>
+
+<script>
+'use strict';
+// ====================================================================
+//  CHRONOS LOST — web edition
+// ====================================================================
+const LW = 640, LH = 360;
+const $ = id => document.getElementById(id);
+const stage = $('stage'), cv = $('cv'), ctx = cv.getContext('2d');
+let K = 1, MAT = new DOMMatrix(), INV = new DOMMatrix();
+function fit(){
+  const w = innerWidth, h = innerHeight, dpr = Math.min(2, devicePixelRatio || 1);
+  let s, m;
+  if (w >= h){ s = Math.min(w / LW, h / LH); m = new DOMMatrix().translate((w - LW * s) / 2, (h - LH * s) / 2).scale(s); }
+  else { s = Math.min(w / LH, h / LW); m = new DOMMatrix().translate((w - LH * s) / 2 + LH * s, (h - LW * s) / 2).rotate(90).scale(s); }
+  MAT = m; INV = m.inverse();
+  stage.style.transform = m.toString();
+  const px = Math.min(1920, Math.round(LW * s * dpr));
+  cv.width = px; cv.height = Math.round(px * LH / LW); K = cv.width / LW;
+}
+addEventListener('resize', fit); fit();
+const toLocal = (cx, cy) => { const p = INV.transformPoint(new DOMPoint(cx, cy)); return { x: p.x, y: p.y }; };
+
+// ---------- utils ----------
+const R = Math.random, clamp = (v, a, b) => v < a ? a : v > b ? b : v, lerp = (a, b, t) => a + (b - a) * t;
+const pick = a => a[Math.floor(R() * a.length)];
+const fmt = n => n >= 1e6 ? (n / 1e6).toFixed(1) + 'M' : n >= 1e4 ? (n / 1e3).toFixed(1) + 'K' : String(Math.floor(n));
+const DAY = 86400000;
+let toastT = 0;
+function toast(t){ const e = $('toast'); e.textContent = t; e.style.display = 'block'; clearTimeout(toastT); toastT = setTimeout(() => e.style.display = 'none', 1800); }
+function modal(html, btns){ $('mbox').innerHTML = html + `<div style="display:flex;gap:8px;justify-content:center;margin-top:12px">${(btns || [['확인']]).map((b, i) => `<button class="cta ${b[2] || ''}" data-i="${i}">${b[0]}</button>`).join('')}</div>`; $('modal').classList.add('on');
+  $('mbox').querySelectorAll('[data-i]').forEach(el => el.onclick = () => { $('modal').classList.remove('on'); const f = (btns || [])[+el.dataset.i]; f && f[1] && f[1](); }); }
+
+// ---------- images ----------
+const IMG = {};
+function img(src){ if (IMG[src]) return IMG[src]; const i = new Image(); i.src = src; i.onerror = () => { i._bad = true; }; IMG[src] = i; return i; }
+const ok = i => i && i.complete && i.naturalWidth > 0 && !i._bad;
+
+// ====================================================================
+//  DATA — 32 agents
+// ====================================================================
+// atk: m=melee, s=shot, l=lob, h=homing, b=beam
+const CH = [
+  // ---- 8 concept agents ----
+  { id:'karin', name:'카린', en:'Karin', r:'SSR', lim:1, role:'메인 딜러', col:'#3ff0ff', hair:'#d8dde6', job:'21세 / 시간 도둑·특무 요원', wpn:'쌍권총',
+    atk:{k:'s', n:2, sp:520, cd:.2, dmg:.3, rng:330}, sk:{n:'버스트 리볼버', k:'barrage', d:'전방에 탄환 8발을 난사합니다.', p:2.2},
+    ult:{n:'크로노 프리즈', k:'freeze', d:'5초간 주변 시간을 정지시키고 탄환 수십 발을 일점사합니다.', p:9},
+    desc:'은발 숏컷, 적갈색 눈동자의 시간 도둑. 쿨하고 시니컬하지만 잃어버린 오빠를 되살리려는 집념을 품고 있다.',
+    lines:['지휘관, 또 서류 더미야? 나가서 뛰자.','시간은 훔치는 거야. 기다려 주지 않거든.','…오빠라면 이럴 때 웃었겠지.'] },
+  { id:'layton', name:'레이튼', en:'Layton', r:'SSR', role:'탱커 / 제어', col:'#58b6ff', hair:'#111', job:'28세 / 메카닉 엔지니어', wpn:'중력장 건틀릿', tank:1,
+    atk:{k:'m', rng:62, arc:1.1, cd:.5, dmg:1.25, kb:30}, sk:{n:'중력 펀치', k:'stun', d:'전방을 강타해 적을 1.5초 기절시킵니다.', p:2.4},
+    ult:{n:'그래비티 돔', k:'gravity', d:'적들을 중앙으로 끌어당겨 속박하고 아군 전체에 시간 보호막을 부여합니다.', p:5},
+    desc:'흑발 포니테일에 반무테 안경. 냉철한 현실주의자이자 카린의 돌발 행동을 수습하는 츤데레.',
+    lines:['계산상 이 작전 성공률은 63%입니다. 충분하군요.','카린이 또 사고를 쳤습니까? …예상 범위입니다.','보호막 출력 정상. 앞은 제가 맡죠.'] },
+  { id:'sera', name:'세라', en:'Sera', r:'SSR', role:'서브 딜러 · 암살', col:'#54ffc0', hair:'#5effc8', job:'24세 / 정보국 해커·잠입', wpn:'모노필라멘트 와이어',
+    atk:{k:'m', rng:96, arc:.7, cd:.32, dmg:.8, kb:6}, sk:{n:'와이어 트랩', k:'slow', d:'주변 적의 이동속도를 60% 감소시킵니다.', p:1.6},
+    ult:{n:'시스템 오버라이드', k:'blink', d:'적의 방어력을 60% 무력화하고 순간이동 연속 베기를 펼칩니다.', p:7},
+    desc:'네온 민트 투톤 헤어와 홀로그램 고글. 장난기 많고 능글맞은 분위기 메이커이자 해킹 전문가.',
+    lines:['방화벽? 그거 먹는 거야? 헤헤.','지휘관 비밀번호… 생일은 좀 아니지 않아?','잠입 완료~ 이제 놀아볼까?'] },
+  { id:'noah', name:'노아', en:'Noah', r:'SR', role:'힐러 / 버퍼', col:'#ffd27a', hair:'#7a4a2a', job:'19세 / 에이전시 오퍼레이터', wpn:'시공간 파동 드론', heal:1,
+    atk:{k:'h', n:1, sp:300, cd:.42, dmg:.7, rng:300}, sk:{n:'파동 회복', k:'heal', d:'파티 전원의 체력을 25% 회복합니다.', p:.25},
+    ult:{n:'리버스 펄스', k:'rewind', d:'아군의 체력을 3초 전 상태로 되감아 즉시 회복시키고 공격 속도를 높입니다.', p:1},
+    desc:'갈색 단발에 대형 헤드셋. 성실하고 다정한 성격으로 지휘관을 절대적으로 신뢰하는 후배 요원.',
+    lines:['지휘관님! 오늘도 제가 통신 맡을게요!','드론 컨디션 좋아요. 다들 무사히 돌아와요.','저… 지휘관님 믿어요. 정말로요.'] },
+  { id:'aria', name:'아리아', en:'Aria', r:'SSR', lim:1, role:'광역 누커', col:'#ffe2a0', hair:'#f3e6c8', job:'23세 / 전직 수석 연구원', wpn:'시공간 레이저 캐논',
+    atk:{k:'b', cd:.9, dmg:1.6, rng:340, pierce:1}, sk:{n:'부유 포대', k:'drones', d:'부유 포대 2기를 전개해 8초간 지원 사격합니다.', p:.45},
+    ult:{n:'이클립스 빔', k:'beam', d:'상공에서 거대 시공간 포격을 가해 광범위 적을 일소하고 화상을 부여합니다.', p:8},
+    desc:'백금발 롱웨이브에 금안. 고고한 귀족풍이지만 크로노스 코퍼레이션에 복수심을 품은 배신자.',
+    lines:['평민의 전장치고는 나쁘지 않네요.','크로노스 코퍼레이션… 제 손으로 끝낼 거예요.','포격 준비 완료. 우아하게 정리하죠.'] },
+  { id:'jin', name:'진', en:'Jin', r:'SSR', role:'근접 브루저', col:'#3b7bff', hair:'#0b0b10', job:'32세 / 현장 타격대장', wpn:'진동 대검',
+    atk:{k:'m', rng:78, arc:1.4, cd:.55, dmg:1.5, kb:22}, sk:{n:'가속 돌진', k:'dash', d:'전방으로 돌진하며 경로의 적을 벱니다.', p:2.6},
+    ult:{n:'템퍼럴 슬래시', k:'dash', d:'초고속으로 전장을 횡단하며 적의 방어막을 파괴하는 일섬.', p:8, big:1},
+    desc:'흉터가 있는 날카로운 인상의 베테랑. 검은 전술 코트, 과묵하지만 동료애가 깊다.',
+    lines:['…따라와. 뒤는 내가 본다.','말은 필요 없다. 결과로 보여주지.','다친 녀석 있으면 말해. 업고라도 간다.'] },
+  { id:'eve', name:'이브', en:'Eve', r:'SSR', lim:1, role:'소환 / 제어', col:'#a8f4ff', hair:'#e6f2ff', job:'불명 / 인공지능 안드로이드', wpn:'나노 머신 군집',
+    atk:{k:'h', n:2, sp:260, cd:.5, dmg:.55, rng:320}, sk:{n:'시간 왜곡', k:'slow', d:'주변 적의 시간을 늦춰 이동·공격 속도를 감소시킵니다.', p:1.8},
+    ult:{n:'제네시스 코드', k:'drones', d:'시간 정지 필드를 전개하고 자폭 드론 군집을 소환합니다.', p:1.2, big:1},
+    desc:'은백색 장발에 기계 관절이 드러난 드레스. 감정을 학습해가는 순수하고 신비로운 안드로이드.',
+    lines:['지휘관. 이 감정의 이름은… ‘기쁨’인가요?','나노 군집, 당신을 보호합니다.','시간은 직선이 아니에요. 당신도 알고 있죠?'] },
+  { id:'leon', name:'레온', en:'Leon', r:'SSR', role:'원거리 스나이퍼', col:'#b08cff', hair:'#e8c860', job:'29세 / 전직 특수부대 저격수', wpn:'차원 관통 레일건',
+    atk:{k:'s', n:1, sp:900, cd:.85, dmg:2.1, rng:420, pierce:1}, sk:{n:'관통 저격', k:'pierce', d:'일직선상의 모든 적을 관통하는 강력한 저격.', p:4},
+    ult:{n:'제로 포인트 샷', k:'pierce', d:'지형과 방어력을 무시하는 초장거리 관통 저격탄을 발사합니다.', p:12, big:1},
+    desc:'숏컷 금발에 전술 안대, 스나이퍼 망토. 완벽주의자이며 냉정한 판단력을 지닌 저격반장.',
+    lines:['바람 2노트. 거리 840. …충분해.','실수는 한 번이면 족하지.','지휘관, 등 뒤는 신경 쓰지 마라.'] },
+  // ---- 24 prompt agents ----
+  { id:'selena', name:'셀레나', en:'Selena', r:'SSR', role:'광역 힐러', col:'#7fc8ff', hair:'#3a86d8', job:'26세 / 시공간 성직자', wpn:'모래시계 지팡이', heal:1,
+    atk:{k:'h', n:1, sp:280, cd:.5, dmg:.75, rng:300}, sk:{n:'정화의 빛', k:'heal', d:'파티 전원의 체력을 30% 회복합니다.', p:.3},
+    ult:{n:'이터널 생츄어리', k:'sanct', d:'아군 전원 부활 버프와 지속 치유 영역을 전개합니다.', p:.5},
+    desc:'푸른 장발, 미래형 수녀복의 시공간 성직자.', lines:['시간의 신이여, 이들을 지켜주소서.','상처는 시간이 치유해요. 조금 빨리 감을 뿐.'],
+    prompt:'26-year-old female chrono-priestess, long flowing cerulean blue hair, futuristic white and gold nun-inspired tactical habit, holding a glowing hourglass staff' },
+  { id:'luna', name:'루나', en:'Luna', r:'SR', role:'디버퍼', col:'#c07cff', hair:'#9a5cff', job:'17세 / 예지 능력자', wpn:'회중시계',
+    atk:{k:'h', n:1, sp:280, cd:.45, dmg:.75, rng:300}, sk:{n:'예지의 바늘', k:'slow', d:'주변 적을 둔화시킵니다.', p:1.4},
+    ult:{n:'슬로우 패러독스', k:'slow', d:'적 전체 공격·이동속도 70% 감소 및 받는 피해 증가.', p:2, big:1},
+    desc:'보라색 트윈테일, 고딕 테크웨어.', lines:['네 미래, 별로 안 좋아 보이는데?','시계 소리 들려? 그게 네 차례야.'],
+    prompt:'17-year-old gothic techwear girl, purple twin-tails, violet eyes, holding an oversized glowing antique pocket watch weapon' },
+  { id:'kai', name:'카이', en:'Kai', r:'SR', role:'서포터', col:'#ff6a4a', hair:'#d8282a', job:'20세 / 특무대 정찰병', wpn:'에너지 톤파',
+    atk:{k:'m', rng:58, arc:1, cd:.28, dmg:.7, kb:8}, sk:{n:'질주', k:'buff', d:'파티 공격력 25% 증가 (8초).', p:.25},
+    ult:{n:'오버드라이브', k:'buff', d:'아군 전체 이동속도·치명타 확률 대폭 상승.', p:.5, big:1},
+    desc:'붉은 숏컷, 고글, 인라인 부츠.', lines:['가자가자! 제일 빨리 도착하는 건 나야!','지휘관, 경주 한 판 어때?'],
+    prompt:'20-year-old energetic male scout, spiky crimson red hair, orange visor goggles on forehead, sporty cyber streetwear hoodie, glowing inline rocket boots, dual energy tonfas' },
+  { id:'marco', name:'마르코', en:'Marco', r:'SR', role:'중화기 딜러', col:'#ffb04a', hair:'#f0d070', job:'30세 / 중장비 폭파병', wpn:'플라즈마 유탄발사기',
+    atk:{k:'l', cd:.8, dmg:1.3, rng:300, aoe:46}, sk:{n:'유탄 세례', k:'bomb', d:'전방에 유탄을 쏟아부어 광역 피해.', p:2.4},
+    ult:{n:'메테오 배러지', k:'meteor', d:'시공간 붕괴 유탄 폭격으로 적 진형 붕괴.', p:2.2},
+    desc:'짧은 금발, 선글라스, 중장갑 조끼.', lines:['폭발은 예술이지! 하하!','엎드려! …아, 늦었나?'],
+    prompt:'30-year-old muscular male demolition specialist, short blonde hair, tinted tactical sunglasses, heavy armored vest, carrying a massive plasma grenade launcher' },
+  { id:'rin', name:'린', en:'Rin', r:'SR', role:'근접 암살자', col:'#3fe0e0', hair:'#2ab3b3', job:'18세 / 뒷골목 정보상', wpn:'에너지 단검',
+    atk:{k:'m', rng:52, arc:.9, cd:.22, dmg:.62, kb:4}, sk:{n:'섀도우 리프', k:'blink', d:'잔상을 남기며 도약해 출혈 피해.', p:2.4},
+    ult:{n:'백스탭 러시', k:'blink', d:'모든 적의 배후로 연속 도약해 치명적인 출혈을 남깁니다.', p:5, big:1},
+    desc:'청록색 단발, 고양이 귀 통신기.', lines:['정보는 공짜가 아니야, 지휘관.','냥… 아니, 그냥 버릇이야.'],
+    prompt:'18-year-old agile female assassin, teal bob hair, cybernetic cat-ear headset, lightweight hooded stealth cloak, dual neon-cyan energy daggers' },
+  { id:'iris', name:'아이리스', en:'Iris', r:'SR', role:'방어형 탱커', col:'#4a7dff', hair:'#2c5cd8', job:'25세 / 진압부대 방패병', wpn:'실드 건틀릿', tank:1,
+    atk:{k:'m', rng:56, arc:1.2, cd:.55, dmg:1, kb:26}, sk:{n:'방패 강타', k:'stun', d:'전방 적을 기절시킵니다.', p:1.8},
+    ult:{n:'이지스 월', k:'shield', d:'전방 절대 방어막을 전개해 투사체를 반사합니다.', p:.6},
+    desc:'푸른 포니테일, 실드 건틀릿.', lines:['제 뒤에 서세요. 아무도 못 지나갑니다.','방어선, 유지!'],
+    prompt:'25-year-old female riot shield vanguard, royal blue ponytail, heavy futuristic knight-inspired tactical armor, massive holographic energy shield gauntlet' },
+  { id:'zero', name:'제로', en:'Zero', r:'SR', role:'지속 딜러', col:'#5ff0ff', hair:'#e6eef6', job:'연령 미상 / AI 안드로이드', wpn:'나노 바이러스',
+    atk:{k:'h', n:1, sp:300, cd:.4, dmg:.7, rng:300, dot:1}, sk:{n:'바이러스 살포', k:'dot', d:'주변 적에게 지속 피해.', p:1.5},
+    ult:{n:'데이터 침식', k:'dot', d:'나노 바이러스 감염으로 지속 피해 및 시전 방해.', p:3.5, big:1},
+    desc:'은백색 보브컷, 발광 푸른 동공.', lines:['감염 경로 확보. 실행.','당신은… 흥미로운 변수입니다.'],
+    prompt:'android youth with silver-white bob hair, glowing cyan cybernetic eyes, sleek black and white synthetic body suit with visible circuit lines, controlling swirling nanobot swarms' },
+  { id:'sophia', name:'소피아', en:'Sophia', r:'SR', role:'힐러 / 정화', col:'#ff7a9a', hair:'#7a4a30', job:'27세 / 에이전시 의무실장', wpn:'바이오 시린지 라이플', heal:1,
+    atk:{k:'s', n:1, sp:520, cd:.5, dmg:.8, rng:320}, sk:{n:'응급 주사', k:'heal', d:'파티 체력 20% 회복.', p:.2},
+    ult:{n:'타임 힐링 필드', k:'sanct', d:'광역 치유 역장 생성 및 디버프 정화.', p:.35},
+    desc:'갈색 롱헤어, 흰 가운 위 전술 벨트.', lines:['주사 무서워요? 후후, 금방 끝나요.','의무실 출입은 다치고 나서 하세요.'],
+    prompt:'27-year-old female chief medic, long chestnut hair, red-rimmed glasses, white lab coat over tactical medical uniform, holding a glowing bio-temporal syringe rifle' },
+  { id:'raven', name:'레이븐', en:'Raven', r:'R', role:'기동 돌격', col:'#4ac0ff', hair:'#111', job:'22세 / 하이브리드 경비병', wpn:'전기 곤봉',
+    atk:{k:'m', rng:54, arc:1, cd:.38, dmg:.9, kb:12}, sk:{n:'볼트시프트', k:'stun', d:'전방을 빠르게 타격해 감전·기절.', p:1.7},
+    ult:{n:'과전류', k:'dash', d:'감전 돌진으로 경로의 적을 기절시킵니다.', p:4},
+    desc:'단발 흑발의 신입 경비병.', lines:['신입 레이븐, 출동 준비 완료!','저도 할 수 있습니다!'],
+    prompt:'22-year-old rookie male guard, short black hair, standard navy tactical security uniform, wielding an electrified stun baton' },
+  { id:'chloe', name:'클로이', en:'Chloe', r:'R', role:'원거리 지원', col:'#ffd84a', hair:'#f0d050', job:'19세 / 통신 보조병', wpn:'신호총',
+    atk:{k:'s', n:1, sp:480, cd:.38, dmg:.75, rng:320}, sk:{n:'시그널 플레어', k:'mark', d:'적 위치 노출 및 방어력 감소.', p:1.2},
+    ult:{n:'조명탄 폭격', k:'bomb', d:'조명탄을 연속 발사해 광역 피해.', p:3.5},
+    desc:'노란 단발에 헤드셋.', lines:['신호 확인! 좌표 보낼게요~','노아 선배, 저 잘하고 있죠?'],
+    prompt:'19-year-old cheerful female comms operator, short blonde bob hair, tactical headset, agency jacket, holding a compact flare launcher pistol' },
+  { id:'dante', name:'단테', en:'Dante', r:'R', role:'경장갑 딜러', col:'#ff8a4a', hair:'#6a3a20', job:'24세 / 용병 출신 총잡이', wpn:'자동 권총',
+    atk:{k:'s', n:1, sp:560, cd:.2, dmg:.48, rng:300}, sk:{n:'래피드 파이어', k:'barrage', d:'연속 사격으로 경직 유발.', p:1.6},
+    ult:{n:'풀 오토', k:'barrage', d:'탄창을 비울 때까지 난사합니다.', p:3, big:1},
+    desc:'거친 갈색 머리, 가죽 재킷.', lines:['돈만 제때 주면 돼.','총알은 거짓말 안 하거든.'],
+    prompt:'24-year-old mercenary gunslinger, messy brown hair, worn brown leather tactical jacket, holding an automatic heavy pistol' },
+  { id:'miya', name:'미야', en:'Miya', r:'R', role:'정찰 · 경계', col:'#ff7ad0', hair:'#222', job:'16세 / 민간 감응자 알바생', wpn:'에너지 슬링샷',
+    atk:{k:'l', cd:.55, dmg:.8, rng:280, aoe:30}, sk:{n:'타임 스톤', k:'slow', d:'역장을 던져 이동 속도 감소.', p:1.2},
+    ult:{n:'왕돌 투척', k:'bomb', d:'거대한 역장 돌을 던져 광역 피해.', p:3.2},
+    desc:'분홍 브릿지 헤어, 후드.', lines:['알바비 나오는 거 맞죠?!','에잇! 맞았다!'],
+    prompt:'16-year-old girl part-time agent, dark hair with pink highlights, oversized casual streetwear hoodie, holding a glowing energy slingshot' },
+  { id:'brock', name:'브록', en:'Brock', r:'R', role:'방어 보조', col:'#ffb84a', hair:'#5a3a20', job:'31세 / 시설 관리 요원', wpn:'플라즈마 스패너', tank:1,
+    atk:{k:'m', rng:58, arc:1.2, cd:.6, dmg:1.1, kb:30}, sk:{n:'해머 스윙', k:'stun', d:'적을 밀쳐내고 소형 보호막 생성.', p:1.6},
+    ult:{n:'긴급 수리', k:'shield', d:'파티 전원 보호막.', p:.45},
+    desc:'듬직한 체격, 작업복 헬멧.', lines:['고장 난 건 다 고쳐줄게. 사람 빼고.','안전모 꼭 써!'],
+    prompt:'31-year-old sturdy male facility engineer, industrial safety helmet, utility jumpsuit with tool belt, holding a giant plasma wrench' },
+  { id:'nick', name:'닉', en:'Nick', r:'R', role:'폭발물 보조', col:'#9aff5a', hair:'#111', job:'20세 / 탄약고 관리병', wpn:'시한폭탄',
+    atk:{k:'l', cd:.7, dmg:1, rng:260, aoe:40}, sk:{n:'미니 밤', k:'bomb', d:'간이 시한폭탄 광역 피해.', p:2},
+    ult:{n:'연쇄 폭파', k:'meteor', d:'폭탄 연쇄 폭발.', p:1.6},
+    desc:'흑발, 방독면.', lines:['쉿… 타이머 소리 들려?','폭발 반경? 대충 넓어.'],
+    prompt:'20-year-old eccentric ordnance specialist, scruffy black hair, half-face gas mask, pouch-covered tactical vest, holding glowing mini time-bombs' },
+  { id:'hannah', name:'해나', en:'Hannah', r:'R', role:'의무 보조', col:'#ff5a6a', hair:'#f0d070', job:'23세 / 응급구급대원', wpn:'메디킷', heal:1,
+    atk:{k:'s', n:1, sp:420, cd:.5, dmg:.6, rng:280}, sk:{n:'퍼스트 에이드', k:'heal', d:'파티 체력 15% 회복.', p:.15},
+    ult:{n:'골든 타임', k:'heal', d:'파티 체력 40% 회복.', p:.4},
+    desc:'금발 포니테일, 적십자 완장.', lines:['괜찮아요, 제가 왔어요!','골든 타임은 지킨다!'],
+    prompt:'23-year-old female paramedic, blonde ponytail, white and red emergency responder jacket, carrying a high-tech medkit case' },
+  { id:'thomas', name:'토마스', en:'Thomas', r:'R', role:'정찰 보조', col:'#8ad0ff', hair:'#5a4030', job:'28세 / 드론 정비사', wpn:'정찰 드론',
+    atk:{k:'h', n:1, sp:300, cd:.48, dmg:.65, rng:300}, sk:{n:'스캔 레이저', k:'mark', d:'약점 스캔으로 치명타 확률 증가.', p:1.2},
+    ult:{n:'드론 편대', k:'drones', d:'드론 편대를 출격시켜 지원 사격.', p:.35},
+    desc:'안경, 정비복.', lines:['드론 3호기, 오늘 기분 좋아 보이네.','스캔 완료. 약점은 저기.'],
+    prompt:'28-year-old male drone technician, round glasses, grey mechanic overalls, holding a remote tablet with a small hovering recon drone beside him' },
+  { id:'citizenA', name:'시민 A', en:'Citizen A', r:'N', role:'회사원', col:'#9aa6b4', hair:'#222', job:'25세 / 회사원', wpn:'서류 가방',
+    atk:{k:'m', rng:48, arc:1, cd:.5, dmg:.55, kb:8}, sk:{n:'패닉 런', k:'slow', d:'비명을 지르며 적의 시선을 분산.', p:.8},
+    ult:{n:'칼퇴 질주', k:'dash', d:'퇴근 본능으로 전방 돌파.', p:2},
+    desc:'평범한 정장 차림의 회사원.', lines:['저… 저 그냥 퇴근하던 길인데요?!','야근보단 이게 낫네…'],
+    prompt:'25-year-old Neo-Seoul office worker in a standard grey business suit, holding a briefcase, startled expression' },
+  { id:'citizenB', name:'시민 B', en:'Citizen B', r:'N', role:'바리스타', col:'#5aa070', hair:'#3a2a1a', job:'30세 / 카페 바리스타', wpn:'뜨거운 커피',
+    atk:{k:'l', cd:.6, dmg:.6, rng:220, aoe:26, dot:1}, sk:{n:'핫 컵', k:'dot', d:'뜨거운 커피로 지속 화상.', p:.8},
+    ult:{n:'더블 샷', k:'bomb', d:'커피 폭탄.', p:2},
+    desc:'앞치마 차림의 바리스타.', lines:['아아 한 잔 하실래요?','샷 추가는 공짜예요.'],
+    prompt:'30-year-old male barista wearing a dark green apron over a white shirt, holding a steaming takeaway coffee cup' },
+  { id:'parttimer', name:'알바생', en:'Part-timer', r:'N', role:'편의점 알바', col:'#4a8aff', hair:'#222', job:'19세 / 편의점 아르바이트생', wpn:'삼단봉',
+    atk:{k:'m', rng:50, arc:1, cd:.45, dmg:.6, kb:6}, sk:{n:'알바의 몽둥이', k:'stun', d:'허술하지만 기절 유발.', p:1},
+    ult:{n:'폐기 처분', k:'bomb', d:'폐기 도시락 투척.', p:2},
+    desc:'편의점 유니폼.', lines:['시급은 올려주시는 거죠…?','봉투 필요하세요?'],
+    prompt:'19-year-old convenience store clerk in a blue striped uniform vest, holding a collapsible baton defensively' },
+  { id:'clerk', name:'행정관', en:'Clerk', r:'N', role:'말단 공무원', col:'#c0b090', hair:'#333', job:'40세 / 시청 공무원', wpn:'결재 서류',
+    atk:{k:'s', n:1, sp:360, cd:.5, dmg:.6, rng:240}, sk:{n:'결재 서류 투척', k:'barrage', d:'서류뭉치를 전방으로 투척.', p:.8},
+    ult:{n:'반려 도장', k:'stun', d:'모든 적을 반려(기절)합니다.', p:1.5},
+    desc:'서류 가방을 든 중년 남성.', lines:['절차대로 하셔야죠.','이건 3층 민원실 가서…'],
+    prompt:'40-year-old middle-aged city hall clerk with slightly receding hair, glasses, clutching stacks of official documents' },
+  { id:'vendor', name:'노점상', en:'Vendor', r:'N', role:'포장마차 주인', col:'#ff9a4a', hair:'#222', job:'45세 / 포장마차 주인', wpn:'국자',
+    atk:{k:'m', rng:54, arc:1.1, cd:.5, dmg:.65, kb:10}, sk:{n:'뜨거운 국자', k:'dot', d:'뜨거운 국물로 화상.', p:.8},
+    ult:{n:'오늘은 서비스', k:'heal', d:'떡볶이로 파티 체력 20% 회복.', p:.2},
+    desc:'두건을 쓴 포장마차 주인.', lines:['어묵 국물 한 사발 하고 가!','장사 접게 생겼구먼, 쯧.'],
+    prompt:'45-year-old street food stall vendor wearing a bandana and stained apron, holding a large metal soup ladle' },
+  { id:'janitor', name:'청소부', en:'Janitor', r:'N', role:'환경미화원', col:'#ff8a2a', hair:'#555', job:'50세 / 환경미화원', wpn:'빗자루',
+    atk:{k:'m', rng:64, arc:1.3, cd:.55, dmg:.6, kb:14}, sk:{n:'빗자루 쓸기', k:'stun', d:'짧은 경직 유발.', p:.8},
+    ult:{n:'대청소', k:'dash', d:'전방을 싹 쓸어버립니다.', p:2},
+    desc:'주황색 형광 조끼.', lines:['거리는 깨끗해야지.','쓰레기는 쓰레기통에!'],
+    prompt:'50-year-old street sanitation worker wearing a high-visibility orange reflective vest and cap, holding a long push broom' },
+  { id:'courier', name:'배달원', en:'Courier', r:'N', role:'퀵서비스 라이더', col:'#ffd04a', hair:'#222', job:'22세 / 퀵서비스 라이더', wpn:'택배 상자',
+    atk:{k:'l', cd:.6, dmg:.65, rng:240, aoe:28}, sk:{n:'택배 투척', k:'bomb', d:'무거운 택배 상자를 던집니다.', p:1.2},
+    ult:{n:'총알 배송', k:'dash', d:'초고속 배송 돌진.', p:2},
+    desc:'오토바이 헬멧, 패딩.', lines:['배송 완료! 별점 5개 부탁~','콜 밀렸어요, 빨리빨리!'],
+    prompt:'22-year-old delivery rider wearing an open-face motorcycle helmet and padded windbreaker, holding a parcel box' },
+  { id:'guard', name:'수습 경비', en:'Guard Novice', r:'N', role:'야간 경비원', col:'#6a8aff', hair:'#222', job:'21세 / 빌딩 야간 경비원', wpn:'손전등',
+    atk:{k:'s', n:1, sp:400, cd:.5, dmg:.55, rng:220}, sk:{n:'플래시 라이트', k:'slow', d:'강한 불빛으로 시야 방해.', p:.8},
+    ult:{n:'비상벨', k:'stun', d:'모든 적을 놀래켜 기절.', p:1.2},
+    desc:'임시 경비복.', lines:['여, 여기는 출입 금지 구역입니다…!','순찰 중 이상 무… 아닌가?'],
+    prompt:'21-year-old novice building night guard in a basic security uniform, shining a bright heavy-duty flashlight forward' },
+];
+const CHM = {}; CH.forEach(c => CHM[c.id] = c);
+const RAR = { SSR:{ hp:1250, atk:118, c:'#ffd44a' }, SR:{ hp:980, atk:94, c:'#d39bff' }, R:{ hp:800, atk:76, c:'#6cc6ff' }, N:{ hp:640, atk:60, c:'#aab4c0' } };
+const STD_SSR = ['layton', 'jin', 'leon', 'selena', 'sera'];
+const LIM_SSR = ['karin', 'aria', 'eve'];
+
+// ---- elements / org / voice ----
+const ELEM = { time:{ n:'시간', e:'⏳', c:'#7fe7ff' }, space:{ n:'공간', e:'🌌', c:'#4a8aff' }, dim:{ n:'차원', e:'🔮', c:'#c07cff' }, order:{ n:'질서', e:'⚖️', c:'#ffd447' }, chaos:{ n:'혼돈', e:'🌀', c:'#ff5a7a' } };
+const BEATS = { time:'space', space:'dim', dim:'order', order:'chaos', chaos:'time' };
+const EL_OF = { karin:'time', noah:'time', selena:'time', luna:'time', kai:'time', hannah:'time', citizenA:'time', clerk:'time',
+  layton:'space', aria:'space', iris:'space', brock:'space', marco:'space', courier:'space', guard:'space',
+  leon:'dim', sera:'dim', zero:'dim', thomas:'dim', chloe:'dim', janitor:'dim',
+  jin:'order', sophia:'order', raven:'order', parttimer:'order', vendor:'order',
+  eve:'chaos', rin:'chaos', dante:'chaos', nick:'chaos', miya:'chaos', citizenB:'chaos' };
+const NON_AGENCY = ['aria', 'eve', 'rin', 'dante', 'miya', 'citizenA', 'citizenB', 'parttimer', 'clerk', 'vendor', 'janitor', 'courier', 'guard'];
+const SUPPORT = ['noah', 'selena', 'sophia', 'hannah', 'kai', 'luna', 'chloe', 'thomas', 'vendor'];
+CH.forEach(c => { c.el = EL_OF[c.id] || 'time'; c.agency = !NON_AGENCY.includes(c.id); c.cls = c.tank ? 'tank' : SUPPORT.includes(c.id) ? 'sup' : 'dps'; });
+const elMul = (a, d) => BEATS[a] === d ? 1.3 : BEATS[d] === a ? .85 : 1;
+const VOICE = {
+  karin:{ lobby:['지휘관, 또 멍 때리고 있네? 시간이 금인 거 몰라?'], ult:'시간은 내 편이야… 크로노 프리즈!', hurt:'큭, 역행 좌표가 흔들려…!', win:'이 정도면 가동 시간 내에 끝났네. 수고했어, 지휘관.' },
+  layton:{ ult:'중력 연산 완료. 그래비티 돔.', hurt:'출력 저하… 계산 범위 내입니다.', win:'예측대로군요. 다음 작전 브리핑은 10분 후입니다.' },
+  sera:{ ult:'시스템 오버라이드~ 로그아웃 시켜줄게!', hurt:'앗, 방화벽 뚫렸다!', win:'완벽한 해킹이었지? 칭찬해줘~' },
+  noah:{ ult:'되감을게요! 리버스 펄스!', hurt:'아, 아파요…!', win:'다들 무사해서 다행이에요, 지휘관님!' },
+  aria:{ ult:'일식의 빛에 무릎 꿇으세요. 이클립스 빔.', hurt:'감히 제 드레스를…!', win:'우아한 결말이군요.' },
+  jin:{ ult:'…템퍼럴 슬래시.', hurt:'크윽… 아직이다.', win:'전원 생존 확인. 철수한다.' },
+  eve:{ ult:'제네시스 코드, 실행합니다.', hurt:'손상… 이것이 ‘아픔’?', win:'지휘관. 지금 이 감정은 ‘안도’입니다.' },
+  leon:{ ult:'제로 포인트. …끝이다.', hurt:'조준이 흔들리는군.', win:'목표 제거. 탄 하나 낭비 없었다.' },
+};
+const voice = (id, k) => (VOICE[id] && VOICE[id][k]) || ({ ult:CHM[id].ult.n + '!', hurt:'윽…!', win:pick(CHM[id].lines) })[k];
+const cardArt = id => `art/c_${id}.webp`, faceArt = id => `art/f_${id}.webp`, sprArt = id => `art/s_${id}.webp`;
+
+// ====================================================================
+//  SAVE
+// ====================================================================
+const SK = 'chronos_v1';
+let M;
+function fresh(){ return { v:1, cry:800, cred:8000, chip:40, stam:120, stamT:0, tk:0, ptk:0, ssrSel:0, wsel:0,
+  own:{}, party:['noah','raven','chloe'], lobby:'noah', clear:{}, star:{}, prologue:0, tut:0,
+  pity:{ pick:0, guar:0, std:0, total:0 }, daily:{ d:'', dun:{ cred:3, chip:3 }, mis:{}, got:{}, free:0 }, att:{ n:0, last:'' },
+  boot:{ start:0, got:{} }, stats:{ bt:0, chain:0, ult:0, lvup:0, pulls:0, dun:0, kills:0 }, abyss:0,
+  passUntil:0, passGot:'', iap:{}, toff:0, tsync:0, last:0, bgm:1, sfx:1, name:'', fund:{}, cmdExp:0, created:Date.now() }; }
+function load(){ try { const s = JSON.parse(localStorage.getItem(SK)); if (s && s.v === 1) return Object.assign(fresh(), s); } catch(e){} return fresh(); }
+M = load();
+const save = () => { try { localStorage.setItem(SK, JSON.stringify(M)); } catch(e){} };
+// server time
+let timeOK = false, rolled = false;
+const nowT = () => Date.now() + (M.toff || 0);
+async function syncTime(){ try { const r = await fetch(location.href.split('#')[0].split('?')[0] + '?t=' + Date.now(), { method:'HEAD', cache:'no-store' }); const d = Date.parse(r.headers.get('Date')); if (!isNaN(d)){ M.toff = d - Date.now(); M.tsync = d; timeOK = true; rolled = false; M.last = Math.max(M.last, d); save(); return true; } } catch(e){} return false; }
+function checkClock(){ const n = nowT(); if (M.last && n < M.last - 10 * 60000) rolled = true; if (!rolled) M.last = Math.max(M.last, n); }
+const passOn = () => !rolled && M.passUntil > nowT() && (timeOK || nowT() - M.tsync < 3 * DAY);
+const today = () => { const d = new Date(nowT() + 9 * 3600000); return d.toISOString().slice(0, 10); };
+const dayIdx = t => Math.floor((t + 9 * 3600000) / DAY);
+syncTime(); setInterval(syncTime, 10 * 60000); setInterval(() => { checkClock(); save(); }, 30000); checkClock();
+
+function dailyReset(){ const t = today(); if (M.daily.d !== t){ M.daily = { d:t, dun:{ cred:3, chip:3 }, mis:{}, got:{}, free:0 }; save(); } }
+dailyReset();
+// stamina
+const STAM_MAX = () => 120 + cmdLv() * 2 + (passOn() ? 60 : 0);
+function stamTick(){ const n = nowT(); if (!M.stamT) M.stamT = n; const per = 4 * 60000; if (M.stam >= STAM_MAX()){ M.stamT = n; return; }
+  const k = Math.floor((n - M.stamT) / per); if (k > 0){ M.stam = Math.min(STAM_MAX(), M.stam + k); M.stamT += k * per; } }
+// commander level
+const cmdLv = () => { let e = M.cmdExp || 0, l = 1; while (e >= l * 60 && l < 80){ e -= l * 60; l++; } return l; };
+
+// ---------- agents ----------
+const owned = id => !!M.own[id];
+function grantAgent(id){ const o = M.own[id]; if (!o){ M.own[id] = { lv:1, aw:0 }; return 'new'; } if (o.aw < 6){ o.aw++; return 'aw'; } M.chip += 30; M.cred += 5000; return 'max'; }
+function stats(id){ const c = CHM[id], o = M.own[id] || { lv:1, aw:0 }, b = RAR[c.r]; const g = (1 + 0.075 * (o.lv - 1)) * (1 + 0.08 * o.aw);
+  let hp = b.hp * g, atk = b.atk * g; if (c.tank){ hp *= 1.45; atk *= .78; } if (c.heal){ hp *= 1.05; atk *= .82; }
+  return { hp:Math.round(hp), atk:Math.round(atk), def:Math.round((c.tank ? 40 : 20) * g), crit:.1 + (c.r === 'SSR' ? .05 : 0) }; }
+const power = id => { const s = stats(id); return Math.round(s.hp * .25 + s.atk * 3.2 + s.def * 2); };
+const lvCost = lv => ({ cred:Math.round(300 * Math.pow(1.13, lv - 1)), chip:Math.ceil(2 + lv * .7) });
+const LV_CAP = () => Math.min(60, 10 + cmdLv() * 2);
+if (!M.own.noah){ M.own.noah = { lv:1, aw:0 }; M.own.raven = { lv:1, aw:0 }; M.own.chloe = { lv:1, aw:0 }; }
+if (!M.boot.start){ M.boot.start = nowT(); }
+
+// ====================================================================
+//  AUDIO
+// ====================================================================
+let AC = null, master = null, sfxG = null, bgmG = null, bgmLP = null;
+function audio(){ if (AC) return; try { AC = new (window.AudioContext || window.webkitAudioContext)(); master = AC.createGain(); master.gain.value = .9; master.connect(AC.destination);
+  sfxG = AC.createGain(); sfxG.gain.value = M.sfx ? .5 : 0; sfxG.connect(master); bgmG = AC.createGain(); bgmG.gain.value = M.bgm ? .22 : 0; bgmLP = AC.createBiquadFilter(); bgmLP.type = 'lowpass'; bgmLP.frequency.value = 20000; bgmG.connect(bgmLP); bgmLP.connect(master); noiseBuf = AC.createBuffer(1, AC.sampleRate, AC.sampleRate); const a = noiseBuf.getChannelData(0); for (let i = 0; i < a.length; i++) a[i] = R() * 2 - 1; } catch(e){} }
+let noiseBuf = null;
+function tone(f, d, type, v, slide, g2){ if (!AC || !M.sfx) return; const t = AC.currentTime, o = AC.createOscillator(), g = AC.createGain(); o.type = type || 'square'; o.frequency.setValueAtTime(f, t); if (slide) o.frequency.exponentialRampToValueAtTime(Math.max(20, slide), t + d);
+  g.gain.setValueAtTime(v || .2, t); g.gain.exponentialRampToValueAtTime(.001, t + d); o.connect(g); g.connect(g2 || sfxG); o.start(t); o.stop(t + d + .02); }
+function noise(d, v, hp, lp){ if (!AC || !M.sfx) return; if (!noiseBuf){ noiseBuf = AC.createBuffer(1, AC.sampleRate, AC.sampleRate); const a = noiseBuf.getChannelData(0); for (let i = 0; i < a.length; i++) a[i] = R() * 2 - 1; }
+  const t = AC.currentTime, s = AC.createBufferSource(), g = AC.createGain(), f = AC.createBiquadFilter(); s.buffer = noiseBuf; f.type = hp ? 'highpass' : 'lowpass'; f.frequency.value = hp || lp || 2000; g.gain.setValueAtTime(v || .2, t); g.gain.exponentialRampToValueAtTime(.001, t + d); s.connect(f); f.connect(g); g.connect(sfxG); s.start(t); s.stop(t + d + .02); }
+const thr = {}; const ok2 = (k, ms) => { const n = performance.now(); if (thr[k] && n - thr[k] < ms) return false; thr[k] = n; return true; };
+const SFX = {
+  shot(){ if (ok2('shot', 45)){ tone(880, .06, 'square', .06, 300); noise(.04, .08, 3000); } },
+  rail(){ tone(1600, .25, 'sawtooth', .12, 120); noise(.2, .15, 1200); },
+  slash(){ if (ok2('sl', 60)){ noise(.09, .16, 2500); tone(420, .07, 'triangle', .07, 900); } },
+  hit(){ if (ok2('hit', 35)) noise(.05, .12, 0, 1400); },
+  boom(){ noise(.35, .32, 0, 600); tone(120, .3, 'sine', .3, 40); },
+  dodge(){ noise(.12, .1, 4000); tone(600, .1, 'sine', .08, 1200); },
+  bt(){ tone(200, .8, 'sine', .25, 60); tone(1200, .5, 'triangle', .1, 300); noise(.6, .12, 0, 900); },
+  chain(){ [523, 784, 1046, 1568].forEach((f, i) => setTimeout(() => tone(f, .18, 'square', .1), i * 45)); noise(.3, .15, 2000); },
+  tag(){ tone(700, .08, 'square', .08, 1400); },
+  ult(){ tone(150, 1, 'sawtooth', .15, 900); [0, 80, 160, 240].forEach((d, i) => setTimeout(() => tone(400 + i * 200, .2, 'square', .08), d)); },
+  hurt(){ if (ok2('hurt', 120)) tone(200, .15, 'sawtooth', .14, 80); },
+  heal(){ [660, 880, 1100].forEach((f, i) => setTimeout(() => tone(f, .15, 'sine', .1), i * 70)); },
+  ui(){ tone(1000, .04, 'square', .05); },
+  win(){ [523, 659, 784, 1046].forEach((f, i) => setTimeout(() => tone(f, .25, 'square', .1), i * 110)); },
+  lose(){ [400, 300, 200].forEach((f, i) => setTimeout(() => tone(f, .3, 'triangle', .12), i * 160)); },
+  pull(r){ const n = r === 'SSR' ? 6 : r === 'SR' ? 4 : 2; for (let i = 0; i < n; i++) setTimeout(() => tone(600 + i * 180, .16, 'square', .09), i * 70); if (r === 'SSR'){ setTimeout(() => { tone(1568, .8, 'triangle', .14); noise(.5, .1, 3000); }, n * 70); } },
+};
+// BGM: procedural synthwave
+const BGM = { on:false, t:0, step:0, mode:'lobby', timer:0,
+  start(mode){ if (!AC) return; this.mode = mode; if (this.on) return; this.on = true; this.t = AC.currentTime + .1; this.step = 0; this.timer = setInterval(() => this.sched(), 60); },
+  stop(){ this.on = false; clearInterval(this.timer); },
+  sched(){ if (!AC || !M.bgm) { this.t = AC ? AC.currentTime + .1 : 0; return; } const bpm = this.mode === 'battle' ? 132 : this.mode === 'boss' ? 146 : 96, st = 60 / bpm / 4;
+    if (this.t < AC.currentTime) this.t = AC.currentTime + .05;
+    while (this.t < AC.currentTime + .25){ const s = this.step % 64, bar = Math.floor(s / 16);
+      const prog = this.mode === 'lobby' ? [57, 53, 48, 55] : [45, 41, 43, 40]; const root = prog[bar];
+      const nf = n => 440 * Math.pow(2, (n - 69) / 12);
+      const play = (f, d, type, v, at) => { const o = AC.createOscillator(), g = AC.createGain(), lp = AC.createBiquadFilter(); o.type = type; o.frequency.value = f; lp.type = 'lowpass'; lp.frequency.value = this.mode === 'lobby' ? 1400 : 2400;
+        g.gain.setValueAtTime(0, at); g.gain.linearRampToValueAtTime(v, at + .01); g.gain.exponentialRampToValueAtTime(.001, at + d); o.connect(lp); lp.connect(g); g.connect(bgmG); o.start(at); o.stop(at + d + .05); };
+      if (this.mode === 'lobby'){
+        if (s % 4 === 0) play(nf(root - 12), st * 3.5, 'triangle', .35, this.t);
+        if (s % 2 === 0){ const ch = [0, 7, 12, 15, 19, 12, 7, 3]; play(nf(root + ch[(s / 2) % 8]), st * 1.8, 'sine', .12, this.t); }
+        if (s % 16 === 0) [0, 3, 7].forEach(i => play(nf(root + 12 + i), st * 14, 'sawtooth', .025, this.t));
+      } else {
+        if (s % 2 === 0) play(nf(root - 12 + (s % 4 === 2 ? 12 : 0)), st * 1.6, 'sawtooth', .22, this.t);
+        const ar = [0, 3, 7, 10, 12, 10, 7, 3]; play(nf(root + 24 + ar[s % 8]), st * .9, 'square', .05, this.t);
+        if (s % 4 === 0){ const o = AC.createOscillator(), g = AC.createGain(); o.frequency.setValueAtTime(150, this.t); o.frequency.exponentialRampToValueAtTime(40, this.t + .12); g.gain.setValueAtTime(.5, this.t); g.gain.exponentialRampToValueAtTime(.001, this.t + .15); o.connect(g); g.connect(bgmG); o.start(this.t); o.stop(this.t + .2); }
+        if (s % 8 === 4 && noiseBuf){ const n = AC.createBufferSource(), g = AC.createGain(), f = AC.createBiquadFilter(); n.buffer = noiseBuf; f.type = 'highpass'; f.frequency.value = 1500; g.gain.setValueAtTime(.18, this.t); g.gain.exponentialRampToValueAtTime(.001, this.t + .12); n.connect(f); f.connect(g); g.connect(bgmG); n.start(this.t); n.stop(this.t + .15); }
+        if (s % 2 === 1 && noiseBuf){ const n = AC.createBufferSource(), g = AC.createGain(), f = AC.createBiquadFilter(); n.buffer = noiseBuf; f.type = 'highpass'; f.frequency.value = 7000; g.gain.setValueAtTime(.05, this.t); g.gain.exponentialRampToValueAtTime(.001, this.t + .04); n.connect(f); f.connect(g); g.connect(bgmG); n.start(this.t); n.stop(this.t + .05); }
+      }
+      this.t += st; this.step++; } } };
+function btAudio(d){ if (!AC || !bgmLP) return; const t = AC.currentTime; bgmLP.frequency.cancelScheduledValues(t); bgmLP.frequency.setValueAtTime(20000, t); bgmLP.frequency.exponentialRampToValueAtTime(420, t + .12); bgmLP.frequency.setValueAtTime(420, t + d - .2); bgmLP.frequency.exponentialRampToValueAtTime(20000, t + d);
+  for (let i = 0; i < d * 2; i++) setTimeout(() => { tone(i % 2 ? 1900 : 2600, .03, 'square', .07); noise(.02, .06, 6000); }, i * 500); }
+function setVol(){ if (sfxG) sfxG.gain.value = M.sfx ? .5 : 0; if (bgmG) bgmG.gain.value = M.bgm ? .22 : 0; }
+</script>
+<script src="story.js"></script>
+<script src="battle.js"></script>
+<script src="vfx.js"></script>
+<script src="ui.js"></script>
+<script src="base.js"></script>
+</body></html>
