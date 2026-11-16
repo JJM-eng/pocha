@@ -150,6 +150,36 @@ button{font-family:inherit;cursor:pointer}
 #loading h1{position:absolute;left:0;right:0;top:26px;text-align:center;margin:0;font-size:34px;font-weight:900;letter-spacing:2px;background:linear-gradient(90deg,#7fe7ff,#fff,#ff7fb0);-webkit-background-clip:text;color:transparent;filter:drop-shadow(0 2px 8px rgba(0,0,0,.8))}
 #loading h1 small{display:block;font-size:12px;letter-spacing:6px;color:#bfe9ff;-webkit-text-fill-color:#bfe9ff}
 #tapStart{position:absolute;bottom:50px;left:0;right:0;text-align:center;font-size:15px;font-weight:900;color:#fff;text-shadow:0 0 10px #26e0ff;animation:blink 1.2s infinite;display:none}
+
+/* ===== UI overhaul ===== */
+:root{--cy:#7fe7ff;--pk:#ff4f9a;--gl:rgba(8,18,38,.82)}
+.rbtn,.lbtn,.cta,.tab,.stg,.row,.back,.cur,.pslot{clip-path:polygon(8px 0,100% 0,100% calc(100% - 8px),calc(100% - 8px) 100%,0 100%,0 8px);border-radius:0!important}
+.cur{clip-path:polygon(6px 0,100% 0,calc(100% - 6px) 100%,0 100%);background:linear-gradient(90deg,rgba(10,24,48,.92),rgba(16,36,70,.85));border:0;box-shadow:inset 0 -2px 0 rgba(127,231,255,.35)}
+.rbtn{background:linear-gradient(135deg,rgba(14,34,66,.94),rgba(5,12,28,.94));border:0;box-shadow:inset 3px 0 0 var(--cy),inset 0 0 0 1px rgba(127,231,255,.22);text-shadow:0 1px 3px #000;transition:transform .12s,filter .12s}
+.rbtn:active,.lbtn:active,.cta:active{transform:scale(.96);filter:brightness(1.25)}
+.rbtn::after{content:'';position:absolute;left:-40%;top:0;width:30%;height:100%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.18),transparent);animation:shine 4.5s infinite}
+@keyframes shine{0%,70%{left:-40%}100%{left:130%}}
+.rbtn.big{background:linear-gradient(120deg,#ff3d7f 0%,#a63cff 55%,#3b2bd6 100%);box-shadow:inset 0 0 0 1px rgba(255,255,255,.35),0 0 18px rgba(255,61,127,.35);font-size:19px;letter-spacing:1px}
+.rbtn.big::before{content:'';position:absolute;inset:0;background:repeating-linear-gradient(115deg,rgba(255,255,255,.05) 0 2px,transparent 2px 9px)}
+.rbtn.gacha{background:linear-gradient(120deg,#16c8ff,#3a5bff 60%,#7a3cff);box-shadow:inset 0 0 0 1px rgba(255,255,255,.35),0 0 14px rgba(40,180,255,.35)}
+.rbtn .e{filter:drop-shadow(0 2px 4px rgba(0,0,0,.6))}
+.lbtn{background:linear-gradient(160deg,rgba(18,40,74,.92),rgba(6,14,30,.92));border:0;box-shadow:inset 0 0 0 1px rgba(127,231,255,.25),inset 0 -3px 0 rgba(127,231,255,.4)}
+.topbar{background:linear-gradient(rgba(2,6,16,.95),rgba(2,6,16,0));height:34px}
+.lvl b{font-size:15px}
+.charName{border-radius:0;clip-path:polygon(8px 0,100% 0,calc(100% - 8px) 100%,0 100%);background:linear-gradient(90deg,rgba(6,14,32,.9),rgba(6,14,32,.6));border:0;box-shadow:inset 3px 0 0 var(--cy)}
+.cta{background:linear-gradient(135deg,#8ff6ff,#22b8ff 55%,#1a7cff);box-shadow:inset 0 -3px 0 rgba(0,40,90,.45),0 0 10px rgba(40,180,255,.3)}
+.cta.pink{background:linear-gradient(135deg,#ffa6cc,#ff3d7f 55%,#d01a6a);box-shadow:inset 0 -3px 0 rgba(90,0,40,.45),0 0 10px rgba(255,61,127,.35)}
+.cta.gold{background:linear-gradient(135deg,#fff0a8,#ffc23a 55%,#ff9a1a);box-shadow:inset 0 -3px 0 rgba(120,60,0,.4),0 0 10px rgba(255,190,60,.35)}
+.page{background:radial-gradient(ellipse at 80% 0%,rgba(60,90,200,.25),transparent 60%),radial-gradient(ellipse at 0% 100%,rgba(255,60,140,.14),transparent 55%),linear-gradient(180deg,#0a1328,#05080f)}
+.page .hd{background:linear-gradient(90deg,rgba(4,10,24,.98),rgba(10,26,54,.95));border-bottom:0;box-shadow:inset 0 -1px 0 rgba(127,231,255,.35)}
+.page .hd h2{font-style:italic;font-size:15px;letter-spacing:1px;background:linear-gradient(90deg,#fff,#7fe7ff);-webkit-background-clip:text;color:transparent}
+.row{background:linear-gradient(135deg,rgba(14,30,58,.9),rgba(8,16,34,.9));border:0;box-shadow:inset 3px 0 0 rgba(127,231,255,.55),inset 0 0 0 1px rgba(127,231,255,.12)}
+.acard{border-radius:0;clip-path:polygon(7px 0,100% 0,100% calc(100% - 7px),calc(100% - 7px) 100%,0 100%,0 7px)}
+.banner{border-radius:0;clip-path:polygon(14px 0,100% 0,100% calc(100% - 14px),calc(100% - 14px) 100%,0 100%,0 14px);border:0;box-shadow:inset 0 0 0 1px rgba(127,231,255,.3)}
+#modal .mb{border-radius:0;clip-path:polygon(14px 0,100% 0,100% calc(100% - 14px),calc(100% - 14px) 100%,0 100%,0 14px);border:0;background:linear-gradient(160deg,#122a52,#070f20);box-shadow:inset 0 0 0 1px rgba(127,231,255,.35)}
+#dlg .box{border-radius:0;clip-path:polygon(16px 0,100% 0,100% calc(100% - 16px),calc(100% - 16px) 100%,0 100%,0 16px);border:0;box-shadow:inset 0 0 0 1px rgba(127,231,255,.35),inset 4px 0 0 var(--cy)}
+.speech{border-radius:0;clip-path:polygon(10px 0,100% 0,100% calc(100% - 10px),calc(100% - 10px) 100%,0 100%,0 10px)}
+#toast{border-radius:0;clip-path:polygon(8px 0,100% 0,calc(100% - 8px) 100%,0 100%);border:0;background:linear-gradient(90deg,#0d2448,#16386a)}
 </style></head>
 <body>
 <div id="stage">
@@ -544,4 +574,5 @@ function setVol(){ if (sfxG) sfxG.gain.value = M.sfx ? .5 : 0; if (bgmG) bgmG.ga
 <script src="vfx.js"></script>
 <script src="ui.js"></script>
 <script src="base.js"></script>
+<script src="fx2.js"></script>
 </body></html>
