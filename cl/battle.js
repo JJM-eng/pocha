@@ -129,7 +129,7 @@ const alive = () => B.en.filter(e => e.hp > 0 && e.st !== 'spawn');
 
 function normalAttack(){ const m = me(), a = m.c.atk, at = m.s.atk * atkMul();
   const cdm = (B.buff.spdT > 0 ? .7 : 1) * (B.bt > 0 ? .7 : 1);
-  B.atkT = a.cd * cdm; B.atkAnim = .2;
+  B.atkT = a.cd * cdm; B.atkAnim = Math.max(.32, a.cd * cdm + .08); B.lastAtk = B.t; B.atkCd = a.cd * cdm;
   const tgt = nearest(B.x, B.y, 520); if (tgt && Math.abs(tgt.x - B.x) > 6) B.face = tgt.x > B.x ? 1 : -1;
   if (a.k === 's'){ const n = a.n || 1; for (let i = 0; i < n; i++){ const ty = tgt ? clamp(tgt.y - B.y, -30, 30) : 0;
       B.shots.push({ x:B.x + B.face * 24, y:B.y - 34 + (i - (n - 1) / 2) * 7, vx:B.face * a.sp, vy:ty * a.sp / Math.max(60, Math.abs((tgt ? tgt.x : B.x + 300) - B.x)), gy:B.y + (i - (n - 1) / 2) * 6 + ty, dmg:at * a.dmg, life:a.rng / a.sp, pierce:a.pierce ? 6 : 0, col:m.c.col, hit:new Set(), w:a.pierce ? 4 : 2.5, len:a.pierce ? 34 : 14 }); }
@@ -137,7 +137,7 @@ function normalAttack(){ const m = me(), a = m.c.atk, at = m.s.atk * atkMul();
   else if (a.k === 'm'){ m.combo = m.comboT > 0 ? (m.combo + 1) % 3 : 0; m.comboT = .9; const fin = m.combo === 2; const rng = a.rng * (fin ? 1.25 : 1);
     let hitAny = false;
     B.en.forEach(e => { if (e.st === 'spawn' || e.hp <= 0) return; const dx = (e.x - B.x) * B.face; if (dx > -16 && dx < rng + e.d.r && Math.abs(e.y - B.y) < 26 + e.d.r * .4){ damage(e, at * a.dmg * (fin ? 1.7 : 1), { kb:(a.kb || 10) * (fin ? 2 : 1) }); hitAny = true; } });
-    SFX.slash(); fx({ k:'slash', x:B.x + B.face * rng * .45, y:B.y - 30, face:B.face, r:rng * .6, life:.16, col:m.c.col, fin, arc:a.arc }); if (hitAny && fin) B.hitstop = .05; }
+    SFX.slash(); fx({ k:'slash', x:B.x + B.face * rng * .45, y:B.y - 46, face:B.face, r:rng * .6, life:.24, col:m.c.col, fin, arc:a.arc }); if (hitAny && fin) B.hitstop = .05; }
   else if (a.k === 'h'){ for (let i = 0; i < (a.n || 1); i++) B.shots.push({ x:B.x + B.face * 10, y:B.y - 50 - i * 8, vx:B.face * 80, vy:-60 + i * 50, gy:B.y, home:1, sp:a.sp, dmg:at * a.dmg, life:1.6, col:m.c.col, hit:new Set(), w:5, len:0, dot:a.dot }); SFX.shot(); }
   else if (a.k === 'l'){ const tx = tgt && Math.abs(tgt.x - B.x) < a.rng ? tgt.x : B.x + B.face * a.rng * .7, ty = tgt ? tgt.y : B.y;
     B.shots.push({ lob:1, x0:B.x + B.face * 14, y0:B.y - 40, tx, ty, x:B.x, y:B.y - 40, gy:ty, t:0, dur:.55, dmg:at * a.dmg, aoe:a.aoe || 36, col:m.c.col, life:1, hit:new Set(), dot:a.dot }); tone(300, .12, 'triangle', .07, 160); }
@@ -374,8 +374,27 @@ function drawChar(id, x, y, face, opt){ const c = ctx, ch = CHM[id]; opt = opt |
   // shadow
   c.fillStyle = 'rgba(0,0,0,.45)'; c.beginPath(); c.ellipse(0, 0, 18, 5, 0, 0, 7); c.fill();
   const bob = opt.anim === 'run' ? Math.abs(Math.sin(B.animT * 14)) * 3 : Math.sin(B.animT * 3) * 1.2;
-  if (ok(sp)){ const fw = sp.naturalWidth / 4, fh = sp.naturalHeight; const fr = opt.skill ? 3 : opt.atk ? 2 : opt.anim === 'run' ? (Math.floor(B.animT * 8) % 2 ? 1 : 0) : 0; const H = 112, W = fw / fh * H;
-    c.scale(face, 1); if (opt.tint) c.filter = opt.tint; c.drawImage(sp, fr * fw, 0, fw, fh, -W / 2, -H - bob + 4, W, H); c.filter = 'none'; }
+  if (ok(sp)){ const fw = sp.naturalWidth / 4, fh = sp.naturalHeight; const H = 112, W = fw / fh * H;
+    let fr = opt.skill ? 3 : opt.atk ? 2 : opt.anim === 'run' ? 1 : 0;
+    // ---- motion: lunge / recoil / squash ----
+    let ox = 0, oy = 0, rot = 0, sx = 1, sy = 1, smear = 0;
+    const ph = opt.ph ?? 9, melee = opt.kind === 'm';
+    if (opt.skill){ const k = Math.min(1, (.35 - (B.skAnim || 0)) / .12); ox = 10 * k; rot = .1 * k; sx = 1 + .08 * (1 - k); sy = 1 - .06 * (1 - k); }
+    else if (opt.atk){
+      if (melee){ const fin = opt.combo === 2; if (fin) fr = 3;
+        const L = fin ? 44 : 30;
+        if (ph < .07){ const k = ph / .07; ox = -12 * k; rot = -.22 * k; sx = .93; sy = 1.07; fr = 1; }            // wind-up (pull back)
+        else if (ph < .17){ const k = (ph - .07) / .1, e2 = 1 - (1 - k) * (1 - k); ox = lerp(-12, L, e2); rot = lerp(-.22, .26, e2); sx = 1.14; sy = .9; smear = 1 - k * .5; }   // strike (lunge)
+        else { const k = Math.min(1, (ph - .17) / .25); ox = lerp(L, 6, k * k); rot = lerp(.26, .04, k); }
+        if (opt.combo === 1) rot *= -.6; }
+      else { const k = Math.min(1, ph / .12); ox = -12 * (1 - k); rot = -.12 * (1 - k); sx = 1 + .07 * (1 - k); sy = 1 - .05 * (1 - k);    // recoil per shot
+        if (ph < .07 && opt.main){ c.save(); c.scale(face, 1); c.globalCompositeOperation = 'lighter'; const g = c.createRadialGradient(W * .42, -H * .64, 0, W * .42, -H * .64, 26); g.addColorStop(0, '#fff'); g.addColorStop(.3, ch.col); g.addColorStop(1, 'rgba(0,0,0,0)'); c.fillStyle = g; c.beginPath(); c.arc(W * .42, -H * .64, 26, 0, 7); c.fill(); c.restore(); } } }
+    else if (opt.anim === 'run'){ const cyc = B.animT * 12; oy = -Math.abs(Math.sin(cyc)) * 4; rot = .07; sy = 1 + Math.sin(cyc * 2) * .025; sx = 1 - Math.sin(cyc * 2) * .02; }
+    else { sy = 1 + Math.sin(B.animT * 3) * .012; }
+    c.scale(face, 1); if (opt.tint) c.filter = opt.tint;
+    if (smear > 0){ c.save(); c.globalAlpha *= .35 * smear; for (let q = 1; q <= 3; q++){ c.globalAlpha = .28 * smear * (1 - q / 4); c.save(); c.translate(ox - q * 14, oy); c.rotate(rot * .6); c.filter = 'brightness(1.8) saturate(0) sepia(1) hue-rotate(160deg)'; c.drawImage(sp, fr * fw, 0, fw, fh, -W / 2, -H + 4, W, H); c.restore(); } c.restore(); }
+    c.translate(ox, oy); c.rotate(rot); c.scale(sx, sy);
+    c.drawImage(sp, fr * fw, 0, fw, fh, -W / 2, -H - bob * .3 + 4, W, H); c.filter = 'none'; }
   else { // procedural agent
     c.scale(face, 1); const lean = opt.atk ? 5 : opt.anim === 'run' ? 3 : 0; const legA = opt.anim === 'run' ? Math.sin(B.animT * 14) * 7 : 0;
     c.strokeStyle = '#141a26'; c.lineWidth = 6; c.lineCap = 'round';
@@ -447,8 +466,12 @@ function drawEnemy(e){ const c = ctx, d = e.d; const sx = e.x - B.cam; if (sx < 
 function drawFx(f){ const c = ctx, k = f.t / f.life, x = (f.x || 0) - B.cam;
   c.save();
   switch (f.k){
-    case 'slash': { c.translate(x, f.y); c.scale(f.face, 1); c.globalAlpha = 1 - k; c.strokeStyle = f.col; c.shadowColor = f.col; c.shadowBlur = 14; c.lineWidth = f.fin ? 7 : 4; const a = (f.arc || 1);
-      c.beginPath(); c.arc(-f.r * .3, 0, f.r, -a + k * .6, a * .7 + k * .6); c.stroke(); c.strokeStyle = '#fff'; c.lineWidth = 2; c.beginPath(); c.arc(-f.r * .3, 0, f.r * .92, -a * .6 + k * .6, a * .5 + k * .6); c.stroke(); break; }
+    case 'slash': { c.translate(x, f.y); c.scale(f.face, 1); const a = (f.arc || 1) * 1.15, R0 = f.r * (f.fin ? 1.35 : 1.15), sw = k < .35 ? k / .35 : 1, fade = k < .35 ? 1 : 1 - (k - .35) / .65;
+      const a0 = -a, a1 = -a + 2 * a * sw; c.globalCompositeOperation = 'lighter'; c.globalAlpha = fade; c.shadowColor = f.col; c.shadowBlur = 22;
+      const g = c.createRadialGradient(0, 0, R0 * .55, 0, 0, R0); g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(.6, f.col); g.addColorStop(.92, '#fff'); g.addColorStop(1, 'rgba(255,255,255,0)'); c.fillStyle = g;
+      c.beginPath(); c.arc(-R0 * .25, 0, R0, a0, a1); c.arc(-R0 * .25 + R0 * .18, 0, R0 * .78, a1, a0, true); c.closePath(); c.fill();
+      c.strokeStyle = '#fff'; c.lineWidth = f.fin ? 3 : 2; c.beginPath(); c.arc(-R0 * .25, 0, R0 * .97, a0 + (a1 - a0) * .2, a1); c.stroke();
+      if (f.fin){ for (let i = 0; i < 6; i++){ const t = a0 + (a1 - a0) * (i / 6); c.fillStyle = '#fff'; c.fillRect(-R0 * .25 + Math.cos(t) * R0 * (1.05 + k * .4), Math.sin(t) * R0 * (1.05 + k * .4), 3, 3); } } break; }
     case 'eslash': { c.translate(x, f.y); c.scale(f.face, 1); c.globalAlpha = 1 - k; c.strokeStyle = '#ff3b6b'; c.lineWidth = 4; c.beginPath(); c.arc(0, 0, 26, -1, 1); c.stroke(); break; }
     case 'muzzle': { c.globalAlpha = 1 - k; c.fillStyle = '#fff'; c.shadowColor = f.col; c.shadowBlur = 16; c.beginPath(); c.arc(x, f.y, 6, 0, 7); c.fill(); break; }
     case 'spark': { c.globalAlpha = 1 - k; c.strokeStyle = f.col; c.lineWidth = 2; for (let i = 0; i < 5; i++){ const a = i * 1.26; c.beginPath(); c.moveTo(x, f.y); c.lineTo(x + Math.cos(a) * 12 * (k + .3), f.y + Math.sin(a) * 12 * (k + .3)); c.stroke(); } break; }
@@ -528,7 +551,7 @@ function render(){ const c = ctx; c.setTransform(K, 0, 0, K, 0, 0); c.clearRect(
   B.zones.forEach(z => { c.save(); c.globalAlpha = .35; c.fillStyle = z.col; c.beginPath(); c.ellipse(z.x - B.cam, z.y, z.r, z.r * .4, 0, 0, 7); c.fill(); c.restore(); });
   // entities sorted
   const list = B.en.map(e => ({ y:e.y, f:() => drawEnemy(e) }));
-  list.push({ y:B.y, f:() => { const m = me(); if (B.iframe > 0 && B.dodgeT > 0) {} drawChar(m.id, B.x - B.cam, B.y, B.face, { anim:B.anim, atk:B.atkAnim > 0, skill:B.skAnim > 0, alpha:B.hurtT > 0 && Math.floor(B.t * 30) % 2 ? .5 : 1 });
+  list.push({ y:B.y, f:() => { const m = me(); if (B.iframe > 0 && B.dodgeT > 0) {} drawChar(m.id, B.x - B.cam, B.y, B.face, { anim:B.anim, atk:B.atkAnim > 0, skill:B.skAnim > 0, ph:B.t - (B.lastAtk ?? -9), kind:m.c.atk.k, combo:m.combo, main:1, alpha:B.hurtT > 0 && Math.floor(B.t * 30) % 2 ? .5 : 1 });
     if (m.shield > 0){ c.save(); c.globalAlpha = .35; c.strokeStyle = '#7fd0ff'; c.lineWidth = 2; c.beginPath(); c.ellipse(B.x - B.cam, B.y - 40, 28, 48, 0, 0, 7); c.stroke(); c.restore(); }
     if (B.reflect > 0){ c.save(); c.globalAlpha = .5; c.fillStyle = '#7fb0ff'; c.fillRect(B.x - B.cam + B.face * 26, B.y - 80, 5, 70); c.restore(); } } });
   list.sort((a, b) => a.y - b.y).forEach(o => o.f());

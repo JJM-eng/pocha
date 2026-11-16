@@ -83,8 +83,12 @@ drawChar = function(id, x, y, face, opt){ const c = ctx, ch = CHM[id]; opt = opt
   if (!opt.ghost && !opt.tint){ c.fillStyle = 'rgba(0,0,0,.5)'; c.beginPath(); c.ellipse(0, 0, 22 * S, 6 * S, 0, 0, 7); c.fill(); }
   const t = B ? B.animT : 0; let bob = 0, rot = 0, sx = 1, sy = 1, dx = 0, dy = 0, fr = 0;
   if (opt.skill){ const k = 1 - Math.max(0, B.skAnim) / .35; fr = 3; dy = -Math.sin(k * Math.PI) * 10; sx = 1 + Math.sin(k * Math.PI) * .04; }
-  else if (opt.atk){ const k = clamp((B.t - (B.atkStart || 0)) / .2, 0, 1), s2 = Math.sin(k * Math.PI); fr = 2;
-    if (B.atkKind === 'm'){ dx = s2 * 12; sx = 1 + s2 * .08; sy = 1 - s2 * .05; rot = s2 * .06; } else { dx = -s2 * 4; rot = -s2 * .04; } }
+  else if (opt.atk){ const ph = B.t - (B.atkStart || 0); fr = 2;
+    if (B.atkKind === 'm'){ const fin = (me().combo === 2), L = fin ? 46 : 32; if (fin) fr = 3; const alt = me().combo === 1 ? -1 : 1;
+      if (ph < .07){ const k = ph / .07; dx = -12 * k; rot = -.2 * k * alt; sx = .93; sy = 1.07; fr = 1; }                       // 예비 동작: 뒤로 당기기
+      else if (ph < .17){ const k = (ph - .07) / .1, e2 = 1 - (1 - k) * (1 - k); dx = lerp(-12, L, e2); rot = lerp(-.2, .24, e2) * alt; sx = 1.14; sy = .9; opt.smear = 1 - k * .5; }   // 베기: 돌진
+      else { const k = Math.min(1, (ph - .17) / .26); dx = lerp(L, 6, k * k); rot = lerp(.24, .03, k) * alt; } }               // 회수
+    else { const k = Math.min(1, ph / .12); dx = -13 * (1 - k); rot = -.13 * (1 - k); sx = 1 + .08 * (1 - k); sy = 1 - .05 * (1 - k); opt.flash = ph < .07; } }
   else if (opt.anim === 'run'){ fr = Math.floor(t * 10) % 2 ? 1 : 0; bob = Math.abs(Math.sin(t * 13)) * 4; rot = .07; sy = 1 + Math.sin(t * 26) * .02; }
   else { bob = Math.sin(t * 2.6) * 1.2; sy = 1 + Math.sin(t * 2.6) * .014; }
   if (opt.dodge){ sx = 1.18; sy = .9; rot = .16; }
@@ -93,7 +97,9 @@ drawChar = function(id, x, y, face, opt){ const c = ctx, ch = CHM[id]; opt = opt
   c.scale(face, 1); c.translate(dx, dy - bob); c.rotate(rot); c.scale(sx, sy);
   if (ok(sp)){ const fw = sp.naturalWidth / 4, fh = sp.naturalHeight, W = fw / fh * H;
     if (opt.tint) c.filter = opt.tint; else if (opt.hurt) c.filter = 'brightness(1.4) sepia(1) hue-rotate(-40deg) saturate(4)'; else if (opt.rim) c.filter = `drop-shadow(0 0 3px ${ch.col})`;
-    c.drawImage(sp, fr * fw, 0, fw, fh, -W / 2, -H + 4, W, H); c.filter = 'none'; }
+    if (opt.smear > 0){ const f0 = c.filter; for (let q = 1; q <= 3; q++){ c.save(); c.globalAlpha *= .3 * opt.smear * (1 - q / 4); c.translate(-q * 15, 0); c.filter = 'brightness(1.9) saturate(0) sepia(1) hue-rotate(160deg)'; c.drawImage(sp, fr * fw, 0, fw, fh, -W / 2, -H + 4, W, H); c.restore(); } c.filter = f0; }
+    c.drawImage(sp, fr * fw, 0, fw, fh, -W / 2, -H + 4, W, H); c.filter = 'none';
+    if (opt.flash){ c.save(); c.globalCompositeOperation = 'lighter'; const gx = W * .44, gy = -H * .66, g = c.createRadialGradient(gx, gy, 0, gx, gy, 30); g.addColorStop(0, '#fff'); g.addColorStop(.3, ch.col); g.addColorStop(1, 'rgba(0,0,0,0)'); c.fillStyle = g; c.beginPath(); c.arc(gx, gy, 30, 0, 7); c.fill(); c.restore(); } }
   else { c.fillStyle = ch.col; c.fillRect(-10, -H * .8, 20, H * .8); }
   c.restore(); };
 function drawReflection(id, x, y, face, frame){ const c = ctx, sp = img(sprArt(id)); if (!ok(sp)) return; const S = ds(y), H = 124 * S, fw = sp.naturalWidth / 4, fh = sp.naturalHeight, W = fw / fh * H;
