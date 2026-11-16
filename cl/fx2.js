@@ -46,7 +46,7 @@ tagTo = function(i){ const before = B.ai; _tagTo(i); if (B.ai !== before){ const
 const _hurt = hurtPlayer;
 hurtPlayer = function(dmg, src){ const hp0 = me().hp, r2 = _hurt(dmg, src); if (B && me().hp < hp0){ B.hurtV = .45; sparks(B.x, B.y - 40, '#ff4c6a', 6, 200); } return r2; };
 const _normal = normalAttack;
-normalAttack = function(){ _normal(); const m = me(), a = m.c.atk; B.atkStart = B.t; B.atkKind = a.k;
+normalAttack = function(){ _normal(); const m = me(), a = m.c.atk; B.atkStart = B.t; B.atkKind = a.k; B.shotN = (B.shotN || 0) + 1;
   if (a.k === 's' || a.k === 'b') { glows(B.x + B.face * 34, B.y - 40 * ds(B.y), m.c.col, 2, 6); } };
 const _useSkill = useSkill;
 useSkill = function(){ const cd0 = me().skCd; _useSkill(); if (cd0 <= 0 && me().skCd > 0){ glows(B.x, B.y - 50, me().c.col, 18, 50); P({ k:'ring', x:B.x, y:B.y, r0:8, r1:110, life:.45, col:me().c.col }); } };
@@ -95,6 +95,14 @@ drawChar = function(id, x, y, face, opt){ const c = ctx, ch = CHM[id]; opt = opt
   if (opt.hurt){ rot = -.14; dx = -5; }
   const H = 124 * S;
   c.scale(face, 1); c.translate(dx, dy - bob); c.rotate(rot); c.scale(sx, sy);
+  const asp = opt.atk && !opt.skill ? img(`art/a_${id}.webp`) : null; let useA = ok(asp) && !opt.ghost;
+  if (useA){ const ph = B.t - (B.atkStart || 0), melee = B.atkKind !== 's';
+    const dur = melee ? Math.max(.34, Math.min(.5, (B.atkCd || .5) * .95)) : Math.max(.14, (B.atkCd || .3) * .95);
+    let fi = Math.min(7, Math.floor(ph / dur * (melee ? 8 : 4))); if (!melee) fi = Math.min(3, fi) + ((B.shotN || 0) % 2) * 4;
+    const fw = asp.naturalWidth / 8, fh = asp.naturalHeight, W = fw / fh * H; c.rotate(-rot * .8);   // frames carry the motion; keep only the lunge
+    if (opt.smear > 0){ for (let q = 1; q <= 3; q++){ c.save(); c.globalAlpha *= .25 * opt.smear * (1 - q / 4); c.translate(-q * 14, 0); c.filter = 'brightness(1.9) saturate(0) sepia(1) hue-rotate(160deg)'; c.drawImage(asp, Math.max(0, fi - q) * fw, 0, fw, fh, -W / 2, -H + 4, W, H); c.restore(); } }
+    if (opt.tint) c.filter = opt.tint; else if (opt.hurt) c.filter = 'brightness(1.4) sepia(1) hue-rotate(-40deg) saturate(4)';
+    c.drawImage(asp, fi * fw, 0, fw, fh, -W / 2, -H + 4, W, H); c.filter = 'none'; c.restore(); return; }
   if (ok(sp)){ const fw = sp.naturalWidth / 4, fh = sp.naturalHeight, W = fw / fh * H;
     if (opt.tint) c.filter = opt.tint; else if (opt.hurt) c.filter = 'brightness(1.4) sepia(1) hue-rotate(-40deg) saturate(4)'; else if (opt.rim) c.filter = `drop-shadow(0 0 3px ${ch.col})`;
     if (opt.smear > 0){ const f0 = c.filter; for (let q = 1; q <= 3; q++){ c.save(); c.globalAlpha *= .3 * opt.smear * (1 - q / 4); c.translate(-q * 15, 0); c.filter = 'brightness(1.9) saturate(0) sepia(1) hue-rotate(160deg)'; c.drawImage(sp, fr * fw, 0, fw, fh, -W / 2, -H + 4, W, H); c.restore(); } c.filter = f0; }
