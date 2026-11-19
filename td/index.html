@@ -819,7 +819,7 @@
   const fastOK = () => !!(M.perm2x || passOn() || (G && G.adFast));
   const passDays = () => Math.max(0, Math.ceil((M.passUntil - nowT()) / DAY));
   syncTime(); setInterval(syncTime, 10 * 60000); setInterval(() => { checkClock(); save(); }, 30000); checkClock();
-  const AD_IDS = { interstitial: '', rewarded: '' };   // ← ONE store placement IDs
+  const AD_IDS = { interstitial: 'xG38L-8BAP-NJJL-6NJR', rewarded: 'xS7EH-B7W6-XK64-6XXX' };   // ← ONE store placement IDs
   const canReward = () => passOn() || !!(window.__osdkSdk && window.__osdkSdk.ads && AD_IDS.rewarded);
   async function showRewarded(){ if (passOn()) return true; const sdk = window.__osdkSdk; if (!canReward()){ toast('광고를 불러올 수 없어요'); return false; }
     try { const res = await sdk.ads.showRewardedAsync({ placementId: AD_IDS.rewarded, requestId: 'r' + Date.now() + Math.random().toString(36).slice(2, 8) }); if (res && res.status === 'rewarded') return true; toast('광고를 끝까지 봐야 보상을 받아요'); return false; } catch(e){ toast('광고를 불러올 수 없어요'); return false; } }
