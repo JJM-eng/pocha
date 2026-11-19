@@ -2,6 +2,7 @@
 <html lang="ko"><head><meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <title>운빨 수호대: 랜덤 디펜스</title>
+<script src="../pns.js" data-game="td"></script>
 <script type="module">
   window.__osdk = (async () => {
     try {
@@ -836,12 +837,13 @@
     try { const r = await sdk.iap.purchase({ productId: q.id, productName: q.name }); grantX(q, false, r); }
     catch(e){ const why = String((e && (e.code || e.reason || e.message)) || e); if (why.includes('already_owned') && q.once){ grantX(q, true); return; } if (why.includes('cancel')) return; toast('결제가 완료되지 않았어요'); } }
   function grantX(q, restored, r){ M.iap = M.iap || {}; if (q.once && M.iap[q.id] && !restored) return; if (!(restored && M.iap[q.id])) q.give(r); M.iap[q.id] = true; save(); SFX.myth(); toast(restored ? '복원 완료!' : q.name + ' 구매 완료!'); renderHome(); }
-  async function restore(){ const sdk = window.__osdkSdk; if (!sdk || !sdk.iap){ toast('원스토어 앱에서만 복원할 수 있어요'); return; } await syncTime();
-    try { const fn = sdk.iap.getPurchasesAsync || sdk.iap.getPurchases; if (!fn){ toast('영구 상품은 다시 구매 버튼을 누르면 무료로 복원돼요'); return; } const list = await fn.call(sdk.iap) || []; let n = 0;
+  async function restore(){ const sdk = window.__osdkSdk; if (!sdk || !sdk.iap){ toast('원스토어 앱에서만 복원할 수 있어요'); return; } await syncTime(); const pn = window.PNS ? await PNS.check() : 0;
+    try { const fn = sdk.iap.getPurchasesAsync || sdk.iap.getPurchases; if (!fn){ toast((pn > 0 ? '미지급 결제 ' + pn + '건을 지급했어요' : pn < 0 ? '결제 서버에 연결하지 못했어요. 잠시 후 다시 해주세요' : '지급되지 않은 결제가 없어요')); return; } const list = await fn.call(sdk.iap) || []; let n = 0;
       list.forEach(it => { const id = it.productId; if (id === 'td_speed'){ M.perm2x = true; n++; } if (id === 'td_pass30'){ const t = Number(it.purchaseTime || it.purchaseTimeMillis || 0); if (t && t + 30 * DAY > M.passUntil){ M.passUntil = t + 30 * DAY; n++; } } });
-      save(); renderHome(); toast(n ? '구매 내역을 복원했어요' : '복원할 구매 내역이 없어요'); } catch(e){ toast('복원하지 못했어요. 잠시 후 다시 해주세요'); } }
+      save(); renderHome(); toast(n ? '구매 내역을 복원했어요' : (pn > 0 ? '미지급 결제 ' + pn + '건을 지급했어요' : pn < 0 ? '결제 서버에 연결하지 못했어요. 잠시 후 다시 해주세요' : '지급되지 않은 결제가 없어요')); } catch(e){ toast('복원하지 못했어요. 잠시 후 다시 해주세요'); } }
   window.__restore = restore;
-  function renderShop(){ const on = passOn(), ok = !rolled;
+  window.__pnsGrant = id => { const q = IAPX.find(x => x.id === id); if (!q) return false; grantX(q, false); return true; };
+  function renderShop(){ if (!(window.__pnsT > Date.now() - 20000)){ window.__pnsT = Date.now(); window.PNS && PNS.check(); } const on = passOn(), ok = !rolled;
     $('shopPrem').innerHTML = `<div class="row"><div style="font-size:30px">👑</div><div class="t">30일 프리미엄 이용권<small>${on ? `<b style="color:#8cf08c">이용 중 · ${passDays()}일 남음</b>` : !ok ? '<b style="color:#ff8a8a">기기 시간이 이상해요 · 인터넷 연결 후 다시 확인돼요</b>' : '2배속 무제한 · 광고 없이 보상 · 매일 💎30'}</small></div><button class="sbtn" data-b="td_pass30" style="background:linear-gradient(#ffe27a,#ffb21e);color:#3a2206">${on ? '연장 ' : ''}${priceOf('td_pass30')}</button></div>
       ${on ? `<div class="row"><div style="font-size:26px">💎</div><div class="t">이용권 일일 보석<small>매일 💎30</small></div><button class="sbtn" id="bPassGem" ${M.passGem === today() ? 'disabled' : ''}>${M.passGem === today() ? '받음' : '받기'}</button></div>` : ''}
       <div class="row"><div style="font-size:30px">⏩</div><div class="t">영구 2배속<small>${M.perm2x ? '<b style="color:#8cf08c">보유 중</b>' : '한 번 사면 평생 2배속'}</small></div><button class="sbtn" data-b="td_speed" ${M.perm2x ? 'disabled' : ''} style="background:linear-gradient(#c9a8ff,#7a4ad8);color:#fff">${M.perm2x ? '보유' : priceOf('td_speed')}</button></div>
